@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+:root {
+  /* Verde Principal */
+  --green-50: #E8F5DE;
+  --green-100: #C2E29A;
+  --green-200: #8DC44E;
+  --green-400: #5A9A22;
+  --green-600: #3D7014;
+  --green-800: #265010;
+  --green-900: #143208;
+
+  /* Naranja Acento */
+  --orange-50: #FEF0E4;
+  --orange-100: #FDD0A5;
+  --orange-200: #F5A44E;
+  --orange-400: #E07B1A;
+  --orange-600: #B05A0C;
+  --orange-800: #7A3D06;
+  --orange-900: #4C2604;
+
+  /* Morado Acento */
+  --purple-50: #F0EBF8;
+  --purple-100: #D4C4F0;
+  --purple-200: #B39CE5;
+  --purple-400: #8060CC;
+  --purple-600: #5C3DA6;
+  --purple-800: #3E2878;
+  --purple-900: #261852;
+
+  /* Neutros Tierra */
+  --earth-50: #F7F3ED;
+  --earth-100: #E8E0D4;
+  --earth-200: #C4B9A8;
+  --earth-400: #8A7E6E;
+  --earth-600: #5C5346;
+  --earth-800: #3A3228;
+  --earth-900: #1E1A14;
+
+  /* Semánticos */
+  --water-light: #D6EEF8;
+  --water: #4AA3CC;
+  --alert-light: #F9DCDC;
+  --alert: #D64545;
+}
+
+body {
+  margin: 0;
+  background: var(--earth-900);
+  color: var(--earth-50);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'DM Serif Display', serif;
+}
+
+code, pre, .font-mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
