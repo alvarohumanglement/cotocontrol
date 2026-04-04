@@ -1,7 +1,9 @@
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useActivityLogs } from '../hooks/useActivityLogs';
 import { useBancales } from '../hooks/useBancales';
-import { ACTION_TYPES } from '../lib/constants';
+import { ACTION_TYPES, COMUNEROS } from '../lib/constants';
+import type { ActionType } from '../lib/types';
 
 function formatDayLabel(iso: string): string {
   return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -16,10 +18,30 @@ function formatTime(iso: string): string {
 export function ActivityPage() {
   const { logs, loading } = useActivityLogs();
   const { bancales } = useBancales();
+  const [filterBancal, setFilterBancal] = useState<string | null>(null);
+  const [filterActions, setFilterActions] = useState<Set<ActionType>>(new Set());
+  const [filterComunero, setFilterComunero] = useState<string | null>(null);
+
+  const toggleAction = (a: ActionType) => {
+    setFilterActions((prev) => {
+      const next = new Set(prev);
+      if (next.has(a)) next.delete(a); else next.add(a);
+      return next;
+    });
+  };
+
+  const filtered = useMemo(() => {
+    return logs.filter((log) => {
+      if (filterBancal && log.bancal_id !== filterBancal) return false;
+      if (filterActions.size > 0 && !filterActions.has(log.action)) return false;
+      if (filterComunero && log.created_by !== filterComunero) return false;
+      return true;
+    });
+  }, [logs, filterBancal, filterActions, filterComunero]);
 
   // Group by day
-  const grouped: { day: string; logs: typeof logs }[] = [];
-  for (const log of logs) {
+  const grouped: { day: string; logs: typeof filtered }[] = [];
+  for (const log of filtered) {
     const day = new Date(log.created_at).toDateString();
     const last = grouped[grouped.length - 1];
     if (last && last.day === day) {
@@ -29,13 +51,61 @@ export function ActivityPage() {
     }
   }
 
+  const actionEntries = Object.entries(ACTION_TYPES) as [ActionType, (typeof ACTION_TYPES)[ActionType]][];
+
   return (
     <div className="p-4 pb-8">
-      <div className="flex items-baseline justify-between mb-4">
+      <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-2xl m-0" style={{ color: 'var(--earth-50)' }}>Actividad</h2>
         <span className="text-xs" style={{ color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
-          {logs.length} registros
+          {filtered.length} de {logs.length}
         </span>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col gap-2 mb-4">
+        {/* Bancal filter */}
+        <div className="flex gap-1 overflow-x-auto pb-1">
+          <button onClick={() => setFilterBancal(null)}
+            className="shrink-0 text-xs px-2 py-1 rounded-full cursor-pointer border-none"
+            style={{ background: !filterBancal ? 'var(--green-900)' : 'var(--earth-800)', color: !filterBancal ? 'var(--green-200)' : 'var(--earth-400)' }}>
+            Todos
+          </button>
+          {bancales.map((b) => (
+            <button key={b.id} onClick={() => setFilterBancal(b.id === filterBancal ? null : b.id)}
+              className="shrink-0 text-xs px-2 py-1 rounded-full cursor-pointer border-none"
+              style={{ background: filterBancal === b.id ? 'var(--green-900)' : 'var(--earth-800)', color: filterBancal === b.id ? 'var(--green-200)' : 'var(--earth-400)' }}>
+              {b.id}
+            </button>
+          ))}
+        </div>
+
+        {/* Action filter */}
+        <div className="flex gap-1 overflow-x-auto pb-1">
+          {actionEntries.map(([key, at]) => (
+            <button key={key} onClick={() => toggleAction(key)}
+              className="shrink-0 text-xs px-2 py-1 rounded-full cursor-pointer border-none"
+              style={{ background: filterActions.has(key) ? 'var(--earth-900)' : 'var(--earth-800)', color: filterActions.has(key) ? at.color : 'var(--earth-400)', border: filterActions.has(key) ? `1px solid ${at.color}` : '1px solid transparent' }}>
+              {at.emoji} {at.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Comunero filter */}
+        <div className="flex gap-1 overflow-x-auto pb-1">
+          <button onClick={() => setFilterComunero(null)}
+            className="shrink-0 text-xs px-2 py-1 rounded-full cursor-pointer border-none"
+            style={{ background: !filterComunero ? 'var(--green-900)' : 'var(--earth-800)', color: !filterComunero ? 'var(--green-200)' : 'var(--earth-400)' }}>
+            Todos
+          </button>
+          {COMUNEROS.map((c) => (
+            <button key={c.id} onClick={() => setFilterComunero(c.id === filterComunero ? null : c.id)}
+              className="shrink-0 text-xs px-2 py-1 rounded-full cursor-pointer border-none"
+              style={{ background: filterComunero === c.id ? c.avatar_color : 'var(--earth-800)', color: filterComunero === c.id ? 'white' : 'var(--earth-400)' }}>
+              {c.display_name}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -43,7 +113,7 @@ export function ActivityPage() {
           <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"
             style={{ borderColor: 'var(--green-400)', borderTopColor: 'transparent' }} />
         </div>
-      ) : logs.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <p className="text-sm" style={{ color: 'var(--earth-400)' }}>Sin actividad registrada</p>
       ) : (
         <div className="relative">
@@ -60,15 +130,21 @@ export function ActivityPage() {
               {group.logs.map((log) => {
                 const at = ACTION_TYPES[log.action] ?? { label: log.action, emoji: '📝', color: 'var(--earth-400)' };
                 const bancal = bancales.find((b) => b.id === log.bancal_id);
+                const comunero = log.created_by ? COMUNEROS.find((c) => c.id === log.created_by) : null;
 
                 return (
                   <div key={log.id} className="relative flex items-start gap-3 mb-3 pl-0">
                     <div className="relative z-10 w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: at.color }}>
+                      style={{ background: comunero?.avatar_color ?? at.color }}>
                       <span className="text-xs leading-none">{at.emoji}</span>
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
                       <div className="flex items-center gap-2 flex-wrap">
+                        {comunero && (
+                          <span className="text-xs font-semibold" style={{ color: comunero.avatar_color }}>
+                            {comunero.display_name}
+                          </span>
+                        )}
                         <span className="text-sm font-medium" style={{ color: 'var(--earth-50)' }}>{at.label}</span>
                         {bancal && (
                           <Link to={`/bancal/${bancal.id}`}

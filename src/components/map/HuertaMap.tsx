@@ -5,9 +5,10 @@ import { BancalShape } from './BancalShape';
 interface HuertaMapProps {
   bancales: Bancal[];
   plantings: Planting[];
+  waterMap?: { getLabel: (id: string) => string | null; getDays: (id: string) => number | null };
 }
 
-export function HuertaMap({ bancales, plantings }: HuertaMapProps) {
+export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
   const navigate = useNavigate();
 
   const handleClick = (id: string) => navigate(`/bancal/${id}`);
@@ -161,6 +162,23 @@ export function HuertaMap({ bancales, plantings }: HuertaMapProps) {
           onClick={handleClick}
         />
       ))}
+
+      {/* ── WATERING INDICATORS ── */}
+      {waterMap && bancales.filter((b) => b.type === 'small' && b.id !== 'B10' && b.id !== 'B11').map((b) => {
+        const label = waterMap.getLabel(b.id);
+        if (!label) return null;
+        const days = waterMap.getDays(b.id) ?? 0;
+        return (
+          <text key={`w-${b.id}`} x={b.position_x} y={b.position_y + 18}
+            textAnchor="middle" fontSize={9}
+            fontFamily="'IBM Plex Mono', monospace"
+            fill={days > 5 ? 'var(--orange-400)' : 'var(--water)'}
+            opacity={0.8}
+            style={{ pointerEvents: 'none' }}>
+            💧 {label}
+          </text>
+        );
+      })}
 
       {/* ── DIMENSION LABELS ── */}
       {/* B10/B11 */}

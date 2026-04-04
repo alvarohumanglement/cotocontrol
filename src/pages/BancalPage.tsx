@@ -3,9 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBancales } from '../hooks/useBancales';
 import { usePlantings } from '../hooks/usePlantings';
 import { useActivityLogs } from '../hooks/useActivityLogs';
-import { ACTION_TYPES, CROP_STAGES } from '../lib/constants';
+import { ACTION_TYPES, CROP_STAGES, BANCAL_STATES } from '../lib/constants';
 import { PlantingForm } from '../components/bancal/PlantingForm';
 import { LogActionSheet } from '../components/bancal/LogActionSheet';
+import { useToast } from '../components/ui/Toast';
+import { useAuth } from '../hooks/useAuth';
+import { useLastWatered } from '../hooks/useLastWatered';
 import type { Bancal, Planting } from '../lib/types';
 
 function formatDate(iso: string): string {
@@ -225,16 +228,51 @@ function HistoryCard({ planting }: { planting: Planting }) {
   );
 }
 
+/* ── Bancal State Selector ── */
+function BancalStateSelector({ bancal, onStateChange }: {
+  bancal: Bancal;
+  onStateChange: (newStatus: string) => void;
+}) {
+  const entries = Object.entries(BANCAL_STATES);
+  return (
+    <div className="flex gap-1 flex-wrap mb-4">
+      {entries.map(([key, st]) => {
+        const isCurrent = bancal.status === key;
+        return (
+          <button key={key} onClick={() => { if (!isCurrent) onStateChange(key); }}
+            className="flex items-center gap-1 shrink-0 cursor-pointer border-none transition-all"
+            style={{
+              background: isCurrent ? st.bg : 'transparent',
+              color: isCurrent ? st.color : 'var(--earth-600)',
+              borderRadius: '999px',
+              padding: '3px 10px',
+              fontSize: '11px',
+              fontWeight: isCurrent ? 600 : 400,
+              border: isCurrent ? `1px solid ${st.color}` : '1px solid var(--earth-800)',
+            }}>
+            <span>{st.emoji}</span>
+            <span>{st.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ── Bancal Detail ── */
 function BancalDetail({ bancal }: { bancal: Bancal }) {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { plantings, updatePlanting, refetch: refetchPlantings } = usePlantings(bancal.id);
   const { logs, addLog, refetch: refetchLogs } = useActivityLogs(bancal.id);
-  const { updateBancalStatus } = useBancales();
+  const { updateBancalStatus, refetch: refetchBancales } = useBancales();
+  const { getLabel: getWaterLabel } = useLastWatered(logs);
+  const { show: showToast, element: toastEl } = useToast();
   const [showPlantingForm, setShowPlantingForm] = useState(false);
   const [showLogSheet, setShowLogSheet] = useState(false);
   const [finalizing, setFinalizing] = useState<{ id: string; status: 'harvested' | 'failed' | 'removed' } | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [stateConfirm, setStateConfirm] = useState<string | null>(null);
 
   const activePlantings = plantings.filter((p) => p.status === 'active');
   const historyPlantings = plantings
@@ -257,6 +295,32 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
     });
     refetchPlantings();
     refetchLogs();
+    const who = profile?.display_name ?? '';
+    showToast(`${CROP_STAGES[newStage].emoji} ${p.crop_name}: ${CROP_STAGES[newStage].label}${who ? ` · ${who}` : ''}`, 'success');
+  };
+
+  const handleBancalStateChange = async (newStatus: string) => {
+    if (activePlantings.length > 0 && newStatus !== 'planted') {
+      setStateConfirm(newStatus);
+      return;
+    }
+    await confirmBancalStateChange(newStatus);
+  };
+
+  const confirmBancalStateChange = async (newStatus: string) => {
+    const oldLabel = BANCAL_STATES[bancal.status]?.label ?? bancal.status;
+    const newLabel = BANCAL_STATES[newStatus]?.label ?? newStatus;
+    await updateBancalStatus(bancal.id, newStatus as Bancal['status']);
+    const who = profile?.display_name ?? '';
+    await addLog({
+      bancal_id: bancal.id,
+      action: 'other',
+      notes: `Estado: ${oldLabel} → ${newLabel}${who ? ` · ${who}` : ''}`,
+    });
+    setStateConfirm(null);
+    refetchBancales();
+    refetchLogs();
+    showToast(`${BANCAL_STATES[newStatus]?.emoji ?? '📝'} ${bancal.name}: ${newLabel}`, 'success');
   };
 
   const handleFinalize = async (notes: string) => {
@@ -287,8 +351,12 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
 
   const finalizingPlanting = finalizing ? plantings.find((p) => p.id === finalizing.id) : null;
 
+  const waterLabel = getWaterLabel(bancal.id);
+
   return (
     <div className="p-4 pb-8">
+      {toastEl}
+
       <button onClick={() => navigate('/map')}
         className="text-sm mb-4 flex items-center gap-1"
         style={{ color: 'var(--green-200)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
@@ -301,10 +369,20 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
         <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 mt-1"
           style={{ background: badge.bg, color: badge.text }}>{badge.label}</span>
       </div>
-      <p className="text-xs mb-6" style={{ color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
-        {bancal.length_m}m × {bancal.width_m}m · {bancal.irrigation_lines} línea{bancal.irrigation_lines > 1 ? 's' : ''} riego
-        {bancal.irrigation_spacing_cm ? ` · goteo ${bancal.irrigation_spacing_cm}cm` : ''}
-      </p>
+      <div className="flex items-center gap-3 mb-2">
+        <p className="text-xs m-0" style={{ color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
+          {bancal.length_m}m × {bancal.width_m}m · {bancal.irrigation_lines} línea{bancal.irrigation_lines > 1 ? 's' : ''} riego
+          {bancal.irrigation_spacing_cm ? ` · goteo ${bancal.irrigation_spacing_cm}cm` : ''}
+        </p>
+        {waterLabel && (
+          <span className="text-xs shrink-0" style={{ color: 'var(--water)', fontFamily: "'IBM Plex Mono', monospace" }}>
+            💧 {waterLabel}
+          </span>
+        )}
+      </div>
+
+      {/* Bancal state selector */}
+      <BancalStateSelector bancal={bancal} onStateChange={handleBancalStateChange} />
 
       {/* Active plantings */}
       <h3 className="text-base mb-3 mt-0" style={{ color: 'var(--earth-50)' }}>🌱 Plantaciones activas</h3>
@@ -397,6 +475,37 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
           onConfirm={handleFinalize}
           onClose={() => setFinalizing(null)} />
       )}
+
+      {/* State change confirm */}
+      {stateConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setStateConfirm(null)}>
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} />
+          <div className="relative rounded-xl p-5 max-w-xs w-full text-center mx-4"
+            style={{ background: 'var(--earth-800)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm mb-2" style={{ color: 'var(--earth-50)' }}>
+              ¿Cambiar {bancal.name} a {BANCAL_STATES[stateConfirm]?.emoji} {BANCAL_STATES[stateConfirm]?.label}?
+            </p>
+            {activePlantings.length > 0 && stateConfirm !== 'planted' && (
+              <p className="text-xs mb-3" style={{ color: 'var(--orange-400)' }}>
+                ⚠️ Este bancal tiene {activePlantings.length} cultivo{activePlantings.length > 1 ? 's' : ''} activo{activePlantings.length > 1 ? 's' : ''}
+              </p>
+            )}
+            <div className="flex gap-2">
+              <button onClick={() => setStateConfirm(null)}
+                className="flex-1 py-2 rounded-lg text-sm cursor-pointer"
+                style={{ background: 'transparent', border: '1px solid var(--earth-600)', color: 'var(--earth-200)' }}>
+                Cancelar
+              </button>
+              <button onClick={() => confirmBancalStateChange(stateConfirm)}
+                className="flex-1 py-2 rounded-lg text-sm font-medium border-none cursor-pointer"
+                style={{ background: 'var(--green-600)', color: 'white' }}>
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -405,6 +514,8 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
 function BancalList() {
   const { bancales } = useBancales();
   const { plantings } = usePlantings();
+  const { logs } = useActivityLogs();
+  const { getDays, getLabel } = useLastWatered(logs);
 
   const small = bancales.filter((b) => b.type === 'small');
   const large = bancales.filter((b) => b.type === 'large');
@@ -421,17 +532,18 @@ function BancalList() {
   return (
     <div className="p-4 pb-8">
       <h2 className="text-2xl mb-4 mt-0" style={{ color: 'var(--earth-50)' }}>Bancales</h2>
-      <BancalGroup title="Bancales pequeños (B1–B11)" bancales={[...small].sort(sortByStatus)} getActivePlantings={getActivePlantings} />
-      <BancalGroup title="Bancales grandes (B12–B15)" bancales={[...large].sort(sortByStatus)} getActivePlantings={getActivePlantings} />
-      <BancalGroup title="Zonas especiales" bancales={special} getActivePlantings={getActivePlantings} />
+      <BancalGroup title="Bancales pequeños (B1–B11)" bancales={[...small].sort(sortByStatus)} getActivePlantings={getActivePlantings} getWater={{ getDays, getLabel }} />
+      <BancalGroup title="Bancales grandes (B12–B15)" bancales={[...large].sort(sortByStatus)} getActivePlantings={getActivePlantings} getWater={{ getDays, getLabel }} />
+      <BancalGroup title="Zonas especiales" bancales={special} getActivePlantings={getActivePlantings} getWater={{ getDays, getLabel }} />
     </div>
   );
 }
 
-function BancalGroup({ title, bancales, getActivePlantings }: {
+function BancalGroup({ title, bancales, getActivePlantings, getWater }: {
   title: string;
   bancales: Bancal[];
   getActivePlantings: (id: string) => Planting[];
+  getWater: { getDays: (id: string) => number | null; getLabel: (id: string) => string | null };
 }) {
   return (
     <div className="mb-6">
@@ -440,6 +552,8 @@ function BancalGroup({ title, bancales, getActivePlantings }: {
         {bancales.map((b) => {
           const badge = STATUS_BADGE[b.status] ?? { bg: 'var(--earth-200)', text: 'var(--earth-800)', label: b.status };
           const active = getActivePlantings(b.id);
+          const wLabel = getWater.getLabel(b.id);
+          const wDays = getWater.getDays(b.id);
           return (
             <Link key={b.id} to={`/bancal/${b.id}`}
               className="rounded-lg p-3 no-underline flex justify-between items-center"
@@ -451,9 +565,19 @@ function BancalGroup({ title, bancales, getActivePlantings }: {
                     {active.map((p) => p.crop_name).join(', ')}
                   </span>
                 )}
-                <p className="text-xs mt-0.5 mb-0" style={{ color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
-                  {b.length_m}m × {b.width_m}m
-                </p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs" style={{ color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
+                    {b.length_m}m × {b.width_m}m
+                  </span>
+                  {wLabel && (
+                    <span className="text-xs" style={{
+                      color: (wDays ?? 0) > 5 ? 'var(--orange-400)' : 'var(--water)',
+                      fontFamily: "'IBM Plex Mono', monospace",
+                    }}>
+                      💧 {wLabel}
+                    </span>
+                  )}
+                </div>
               </div>
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0"
                 style={{ background: badge.bg, color: badge.text }}>{badge.label}</span>

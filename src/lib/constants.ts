@@ -1,11 +1,19 @@
 import type { Bancal, Planting, ActivityLog, ActionType, Profile } from './types';
 
 export const COMUNEROS: Profile[] = [
-  { id: 'c1', display_name: 'Álvaro',  avatar_color: '#5A9A22', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'c2', display_name: 'María',   avatar_color: '#E07B1A', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'c3', display_name: 'Pablo',   avatar_color: '#8060CC', created_at: '2026-01-01T00:00:00Z' },
-  { id: 'c4', display_name: 'Lucía',   avatar_color: '#4AA3CC', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'nacho',  display_name: 'Nacho',  avatar_color: '#5A9A22', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'paloma', display_name: 'Paloma', avatar_color: '#8060CC', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'carmen', display_name: 'Carmen', avatar_color: '#E07B1A', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'sergio', display_name: 'Sergio', avatar_color: '#4AA3CC', created_at: '2026-01-01T00:00:00Z' },
 ];
+
+export const BANCAL_STATES: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
+  planted:          { label: 'Plantado',       emoji: '🌱', color: 'var(--green-400)',  bg: 'var(--green-900)' },
+  waiting_chickens: { label: 'Esp. gallinas',  emoji: '⏳', color: 'var(--orange-200)', bg: 'var(--earth-800)' },
+  chickens:         { label: 'Gallinas',       emoji: '🐔', color: 'var(--orange-400)', bg: 'var(--orange-900)' },
+  post_chickens:    { label: 'Para preparar',  emoji: '⛏️', color: 'var(--purple-400)', bg: 'var(--purple-900)' },
+  available:        { label: 'Disponible',     emoji: '✅', color: 'var(--green-200)',  bg: 'var(--earth-800)' },
+};
 
 export const BANCALES: Bancal[] = [
   // Círculo B1-B9 (5m × 1.2m, 1 línea riego)
