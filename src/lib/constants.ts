@@ -49,6 +49,14 @@ export const ACTION_TYPES: Record<ActionType, { label: string; emoji: string; co
   other:         { label: 'Otro',             emoji: '📝', color: 'var(--earth-400)' },
 };
 
+export const CROP_STAGES: Record<number, { label: string; emoji: string; color: string; bg: string }> = {
+  0: { label: 'Germinación', emoji: '🫘', color: 'var(--earth-400)',  bg: 'var(--earth-900)' },
+  1: { label: 'Desarrollo',  emoji: '🌿', color: 'var(--green-200)',  bg: 'var(--green-900)' },
+  2: { label: 'Producción',  emoji: '🍅', color: 'var(--green-400)',  bg: 'var(--green-800)' },
+  3: { label: 'Floración',   emoji: '🌸', color: 'var(--purple-200)', bg: 'var(--purple-900)' },
+  4: { label: 'Semillas',    emoji: '🌾', color: 'var(--orange-200)', bg: 'var(--orange-900)' },
+};
+
 export const MOCK_PLANTINGS: Planting[] = [
   { id: 'p1', bancal_id: 'B1', crop_name: 'Tomates cherry', variety: 'Pera amarillo', quantity: 18, planted_date: '2026-02-15', status: 'active', notes: 'Buen rendimiento Q1', created_at: '2026-02-15T10:00:00Z', updated_at: '2026-02-15T10:00:00Z' },
   { id: 'p2', bancal_id: 'B2', crop_name: 'Lechugas', variety: 'Batavia', quantity: 25, planted_date: '2026-03-01', status: 'active', notes: 'Cosecha escalonada cada 15 días', created_at: '2026-03-01T10:00:00Z', updated_at: '2026-03-01T10:00:00Z' },

@@ -37,6 +37,7 @@ export interface Planting {
   quantity: number;
   planted_date: string;
   expected_harvest?: string;
+  stage?: number;
   status: PlantingStatus;
   notes?: string;
   created_by?: string;

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useBancales } from '../hooks/useBancales';
 import { usePlantings } from '../hooks/usePlantings';
 import { useActivityLogs } from '../hooks/useActivityLogs';
-import { ACTION_TYPES } from '../lib/constants';
+import { ACTION_TYPES, CROP_STAGES } from '../lib/constants';
 import { PlantingForm } from '../components/bancal/PlantingForm';
 import { LogActionSheet } from '../components/bancal/LogActionSheet';
 import type { Bancal, Planting } from '../lib/types';
@@ -29,67 +29,197 @@ const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> 
   resting:          { bg: 'var(--earth-200)',  text: 'var(--earth-800)',  label: 'Descanso' },
 };
 
-/* ── Planting Card with harvest actions ── */
-function PlantingCard({ planting, onStatusChange }: {
+const FINALIZE_CONFIG = {
+  harvested: { title: 'Cosechar', emoji: '🧺', placeholder: 'Cantidad cosechada, calidad, observaciones...', btnBg: 'var(--green-600)', action: 'harvested' as const },
+  removed:   { title: 'Retirar',  emoji: '❌', placeholder: 'Motivo de retirada...', btnBg: 'var(--earth-600)', action: 'other' as const },
+  failed:    { title: 'Registrar pérdida', emoji: '💀', placeholder: 'Qué pasó, causa probable...', btnBg: 'var(--alert)', action: 'observed' as const },
+};
+
+/* ── Stage Editor Row ── */
+function StageEditor({ planting, onStageChange }: { planting: Planting; onStageChange: (stage: number) => void }) {
+  const current = planting.stage ?? 0;
+  return (
+    <div className="flex gap-1 mt-2 overflow-x-auto">
+      {[0, 1, 2, 3, 4].map((s) => {
+        const st = CROP_STAGES[s];
+        const isCurrent = s === current;
+        const isPast = s < current;
+        return (
+          <button key={s} onClick={() => onStageChange(s)}
+            className="flex items-center gap-0.5 shrink-0 cursor-pointer border-none transition-all"
+            style={{
+              background: isCurrent ? st.bg : 'transparent',
+              color: isCurrent ? st.color : isPast ? st.color : 'var(--earth-600)',
+              borderRadius: '999px',
+              padding: '2px 8px',
+              fontSize: '11px',
+              fontWeight: isCurrent ? 600 : 400,
+              opacity: isCurrent ? 1 : isPast ? 0.6 : 0.35,
+              transform: isCurrent ? 'scale(1.05)' : 'scale(1)',
+            }}>
+            <span>{st.emoji}</span>
+            <span className="hidden sm:inline">{st.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── Planting Card ── */
+function PlantingCard({ planting, onFinalize, onStageChange }: {
   planting: Planting;
-  onStatusChange: (id: string, status: 'harvested' | 'failed' | 'removed') => void;
+  onFinalize: (id: string, status: 'harvested' | 'failed' | 'removed') => void;
+  onStageChange: (id: string, stage: number) => void;
 }) {
-  const [showActions, setShowActions] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const stage = CROP_STAGES[planting.stage ?? 0];
 
   return (
     <div className="rounded-lg p-3" style={{ background: 'var(--earth-800)', border: '1px solid var(--earth-600)' }}>
       <div className="flex justify-between items-start">
         <div className="min-w-0 flex-1">
-          <span className="font-semibold text-sm" style={{ color: 'var(--earth-50)' }}>
-            {planting.crop_name}
-          </span>
-          {planting.variety && (
-            <span className="text-xs ml-2" style={{ color: 'var(--earth-400)' }}>
-              {planting.variety}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-sm" style={{ color: 'var(--earth-50)' }}>
+              {planting.crop_name}
             </span>
+            {/* Stage badge */}
+            <span style={{ background: stage.bg, color: stage.color, borderRadius: '999px', padding: '2px 10px', fontSize: '12px' }}>
+              {stage.emoji} {stage.label}
+            </span>
+          </div>
+          {planting.variety && (
+            <p className="text-xs mt-0.5 mb-0" style={{ color: 'var(--earth-400)' }}>{planting.variety}</p>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-xs" style={{ color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
             ×{planting.quantity}
           </span>
-          <button
-            onClick={() => setShowActions(!showActions)}
-            className="text-base leading-none bg-transparent border-none cursor-pointer p-0"
-            title="Acciones"
-          >
-            🧺
+          <button onClick={() => setShowMenu(!showMenu)}
+            className="text-sm leading-none bg-transparent border-none cursor-pointer px-1 py-0.5 rounded"
+            style={{ color: 'var(--earth-400)' }}>
+            ···
           </button>
         </div>
       </div>
+
       <p className="text-xs mt-1 mb-0" style={{ color: 'var(--earth-400)' }}>
         Plantado {formatDate(planting.planted_date)}
       </p>
       {planting.notes && (
-        <p className="text-xs mt-1 mb-0 italic" style={{ color: 'var(--earth-400)' }}>
-          {planting.notes}
-        </p>
+        <p className="text-xs mt-1 mb-0 italic" style={{ color: 'var(--earth-400)' }}>{planting.notes}</p>
       )}
 
-      {/* Contextual actions */}
-      {showActions && (
+      {/* Stage editor */}
+      <StageEditor planting={planting} onStageChange={(s) => onStageChange(planting.id, s)} />
+
+      {/* Finalize menu */}
+      {showMenu && (
         <div className="flex gap-2 mt-2 pt-2" style={{ borderTop: '1px solid var(--earth-600)' }}>
-          <button onClick={() => onStatusChange(planting.id, 'harvested')}
+          <button onClick={() => { setShowMenu(false); onFinalize(planting.id, 'harvested'); }}
             className="flex-1 text-xs py-1.5 rounded cursor-pointer border-none"
             style={{ background: 'var(--green-900)', color: 'var(--green-200)' }}>
             🧺 Cosechar
           </button>
-          <button onClick={() => onStatusChange(planting.id, 'failed')}
-            className="flex-1 text-xs py-1.5 rounded cursor-pointer border-none"
-            style={{ background: 'var(--alert-light)', color: 'var(--alert)' }}>
-            ❌ Falló
-          </button>
-          <button onClick={() => onStatusChange(planting.id, 'removed')}
+          <button onClick={() => { setShowMenu(false); onFinalize(planting.id, 'removed'); }}
             className="flex-1 text-xs py-1.5 rounded cursor-pointer border-none"
             style={{ background: 'var(--earth-900)', color: 'var(--earth-400)' }}>
-            🗑️ Retirar
+            ❌ Retirar
+          </button>
+          <button onClick={() => { setShowMenu(false); onFinalize(planting.id, 'failed'); }}
+            className="flex-1 text-xs py-1.5 rounded cursor-pointer border-none"
+            style={{ background: 'var(--alert-light)', color: 'var(--alert)' }}>
+            💀 Perdida
           </button>
         </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Finalize Modal ── */
+function FinalizeModal({ planting, status, onConfirm, onClose }: {
+  planting: Planting;
+  status: 'harvested' | 'failed' | 'removed';
+  onConfirm: (notes: string) => void;
+  onClose: () => void;
+}) {
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+  const config = FINALIZE_CONFIG[status];
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    await onConfirm(notes);
+    setSaving(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} />
+      <div className="relative rounded-xl p-5 max-w-sm w-full mx-4"
+        style={{ background: 'var(--earth-800)' }}
+        onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-base m-0 mb-1" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--earth-50)' }}>
+          {config.emoji} {config.title} {planting.crop_name}
+        </h3>
+        <p className="text-xs mb-3" style={{ color: 'var(--earth-400)' }}>
+          Stage: {CROP_STAGES[planting.stage ?? 0].emoji} {CROP_STAGES[planting.stage ?? 0].label}
+        </p>
+        <form onSubmit={handleSubmit}>
+          <textarea required value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
+            placeholder={config.placeholder}
+            className="w-full rounded-lg px-3 py-2.5 outline-none resize-none mb-3 text-base"
+            style={{ background: 'var(--earth-900)', border: '1px solid var(--earth-600)', color: 'var(--earth-50)', fontSize: '16px' }} />
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-2 rounded-lg text-sm cursor-pointer"
+              style={{ background: 'transparent', border: '1px solid var(--earth-600)', color: 'var(--earth-200)' }}>
+              Cancelar
+            </button>
+            <button type="submit" disabled={saving || !notes.trim()}
+              className="flex-1 py-2 rounded-lg text-sm font-medium border-none cursor-pointer"
+              style={{ background: saving ? 'var(--earth-600)' : config.btnBg, color: 'white', opacity: saving || !notes.trim() ? 0.6 : 1 }}>
+              {saving ? 'Guardando...' : 'Confirmar'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ── History Card ── */
+function HistoryCard({ planting }: { planting: Planting }) {
+  const statusLabel: Record<string, { emoji: string; label: string; color: string }> = {
+    harvested: { emoji: '🧺', label: 'Cosechado', color: 'var(--green-200)' },
+    removed:   { emoji: '❌', label: 'Retirado',  color: 'var(--earth-400)' },
+    failed:    { emoji: '💀', label: 'Perdido',   color: 'var(--alert)' },
+  };
+  const st = statusLabel[planting.status] ?? { emoji: '📝', label: planting.status, color: 'var(--earth-400)' };
+  const stage = CROP_STAGES[planting.stage ?? 0];
+
+  return (
+    <div className="rounded-lg p-2.5" style={{ background: 'var(--earth-800)', border: '1px solid var(--earth-600)', opacity: 0.7 }}>
+      <div className="flex justify-between items-start">
+        <span className="text-sm font-medium" style={{ color: 'var(--earth-50)' }}>
+          {planting.crop_name}
+          {planting.variety && <span className="font-normal text-xs ml-1" style={{ color: 'var(--earth-400)' }}>{planting.variety}</span>}
+        </span>
+        <span className="text-xs shrink-0" style={{ color: st.color }}>{st.emoji} {st.label}</span>
+      </div>
+      <div className="flex items-center gap-2 mt-1 flex-wrap">
+        <span className="text-xs" style={{ color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
+          {formatDate(planting.planted_date)} → {formatDate(planting.updated_at)}
+        </span>
+        <span style={{ background: stage.bg, color: stage.color, borderRadius: '999px', padding: '1px 7px', fontSize: '10px' }}>
+          {stage.emoji} {stage.label}
+        </span>
+      </div>
+      {planting.notes && (
+        <p className="text-xs mt-1 mb-0 italic" style={{ color: 'var(--earth-400)' }}>{planting.notes}</p>
       )}
     </div>
   );
@@ -103,39 +233,59 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
   const { updateBancalStatus } = useBancales();
   const [showPlantingForm, setShowPlantingForm] = useState(false);
   const [showLogSheet, setShowLogSheet] = useState(false);
-  const [confirm, setConfirm] = useState<{ id: string; status: 'harvested' | 'failed' | 'removed' } | null>(null);
+  const [finalizing, setFinalizing] = useState<{ id: string; status: 'harvested' | 'failed' | 'removed' } | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   const activePlantings = plantings.filter((p) => p.status === 'active');
+  const historyPlantings = plantings
+    .filter((p) => p.status !== 'active')
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
   const recentLogs = logs.slice(0, 10);
   const badge = STATUS_BADGE[bancal.status] ?? { bg: 'var(--earth-200)', text: 'var(--earth-800)', label: bancal.status };
 
-  const handleStatusChange = (id: string, status: 'harvested' | 'failed' | 'removed') => {
-    setConfirm({ id, status });
-  };
-
-  const confirmStatusChange = async () => {
-    if (!confirm) return;
-    const p = plantings.find((pl) => pl.id === confirm.id);
-    await updatePlanting(confirm.id, { status: confirm.status });
-
-    const labels = { harvested: 'Cosechado', failed: 'Falló', removed: 'Retirado' };
+  const handleStageChange = async (id: string, newStage: number) => {
+    const p = plantings.find((pl) => pl.id === id);
+    if (!p) return;
+    const oldStage = p.stage ?? 0;
+    if (oldStage === newStage) return;
+    await updatePlanting(id, { stage: newStage });
     await addLog({
       bancal_id: bancal.id,
-      planting_id: confirm.id,
-      action: confirm.status === 'harvested' ? 'harvested' : 'other',
-      notes: `${labels[confirm.status]}: ${p?.crop_name ?? ''}`,
+      planting_id: id,
+      action: 'observed',
+      notes: `${p.crop_name}: ${CROP_STAGES[oldStage].label} → ${CROP_STAGES[newStage].label}`,
     });
-
-    // If no active plantings left, mark bancal empty
-    const remaining = activePlantings.filter((pl) => pl.id !== confirm.id);
-    if (remaining.length === 0) {
-      await updateBancalStatus(bancal.id, 'empty');
-    }
-
-    setConfirm(null);
     refetchPlantings();
     refetchLogs();
   };
+
+  const handleFinalize = async (notes: string) => {
+    if (!finalizing) return;
+    const p = plantings.find((pl) => pl.id === finalizing.id);
+    if (!p) return;
+
+    await updatePlanting(finalizing.id, { status: finalizing.status });
+
+    const config = FINALIZE_CONFIG[finalizing.status];
+    const prefix = finalizing.status === 'harvested' ? 'Cosecha' : finalizing.status === 'removed' ? 'Retirado' : 'Pérdida';
+    await addLog({
+      bancal_id: bancal.id,
+      planting_id: finalizing.id,
+      action: config.action,
+      notes: `${prefix}: ${p.crop_name}. ${notes}`,
+    });
+
+    const remaining = activePlantings.filter((pl) => pl.id !== finalizing.id);
+    if (remaining.length === 0) {
+      await updateBancalStatus(bancal.id, 'waiting_chickens');
+    }
+
+    setFinalizing(null);
+    refetchPlantings();
+    refetchLogs();
+  };
+
+  const finalizingPlanting = finalizing ? plantings.find((p) => p.id === finalizing.id) : null;
 
   return (
     <div className="p-4 pb-8">
@@ -156,26 +306,26 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
         {bancal.irrigation_spacing_cm ? ` · goteo ${bancal.irrigation_spacing_cm}cm` : ''}
       </p>
 
-      {/* Plantaciones */}
+      {/* Active plantings */}
       <h3 className="text-base mb-3 mt-0" style={{ color: 'var(--earth-50)' }}>🌱 Plantaciones activas</h3>
       {activePlantings.length === 0 ? (
         <div className="rounded-lg p-4 mb-6 text-center" style={{ background: 'var(--earth-800)' }}>
           <p className="text-sm mb-3" style={{ color: 'var(--earth-400)' }}>Sin plantaciones activas</p>
           <button onClick={() => setShowPlantingForm(true)}
             className="text-sm font-medium px-4 py-2 rounded-lg border-none cursor-pointer"
-            style={{ background: 'var(--green-400)', color: 'white' }}>
-            + Plantar
-          </button>
+            style={{ background: 'var(--green-400)', color: 'white' }}>+ Plantar</button>
         </div>
       ) : (
         <div className="flex flex-col gap-2 mb-6">
           {activePlantings.map((p) => (
-            <PlantingCard key={p.id} planting={p} onStatusChange={handleStatusChange} />
+            <PlantingCard key={p.id} planting={p}
+              onFinalize={(id, status) => setFinalizing({ id, status })}
+              onStageChange={handleStageChange} />
           ))}
         </div>
       )}
 
-      {/* Últimas acciones */}
+      {/* Recent logs */}
       <h3 className="text-base mb-3 mt-0" style={{ color: 'var(--earth-50)' }}>📋 Últimas acciones</h3>
       {recentLogs.length === 0 ? (
         <p className="text-sm" style={{ color: 'var(--earth-400)' }}>Sin actividad registrada</p>
@@ -199,62 +349,53 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
         </div>
       )}
 
-      {/* Buttons */}
+      {/* History section */}
+      <div className="mb-6">
+        <button onClick={() => setShowHistory(!showHistory)}
+          className="flex items-center gap-2 w-full text-left bg-transparent border-none cursor-pointer p-0 mb-2"
+          style={{ color: 'var(--earth-400)' }}>
+          <span className="text-base">{showHistory ? '▾' : '▸'}</span>
+          <h3 className="text-base m-0" style={{ color: 'var(--earth-50)' }}>📜 Historial de cultivos</h3>
+          {historyPlantings.length > 0 && (
+            <span className="text-xs" style={{ color: 'var(--earth-400)' }}>({historyPlantings.length})</span>
+          )}
+        </button>
+        {showHistory && (
+          historyPlantings.length === 0 ? (
+            <p className="text-xs pl-6" style={{ color: 'var(--earth-400)' }}>Sin cultivos anteriores</p>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {historyPlantings.map((p) => <HistoryCard key={p.id} planting={p} />)}
+            </div>
+          )
+        )}
+      </div>
+
+      {/* Action buttons */}
       <div className="flex gap-2 mt-2">
         <button onClick={() => setShowPlantingForm(true)}
           className="flex-1 text-sm font-medium py-2.5 rounded-lg border-none cursor-pointer"
-          style={{ background: 'var(--green-400)', color: 'white' }}>
-          + Plantar
-        </button>
+          style={{ background: 'var(--green-400)', color: 'white' }}>+ Plantar</button>
         <button onClick={() => setShowLogSheet(true)}
           className="flex-1 text-sm font-medium py-2.5 rounded-lg cursor-pointer"
-          style={{ background: 'transparent', color: 'var(--earth-200)', border: '1px solid var(--earth-600)' }}>
-          + Registrar acción
-        </button>
+          style={{ background: 'transparent', color: 'var(--earth-200)', border: '1px solid var(--earth-600)' }}>+ Registrar acción</button>
       </div>
 
       {/* Modals */}
       {showPlantingForm && (
-        <PlantingForm
-          bancalId={bancal.id}
-          bancalName={bancal.name}
+        <PlantingForm bancalId={bancal.id} bancalName={bancal.name}
           onClose={() => setShowPlantingForm(false)}
-          onSuccess={() => { setShowPlantingForm(false); refetchPlantings(); refetchLogs(); }}
-        />
+          onSuccess={() => { setShowPlantingForm(false); refetchPlantings(); refetchLogs(); }} />
       )}
       {showLogSheet && (
-        <LogActionSheet
-          bancalId={bancal.id}
-          bancalName={bancal.name}
+        <LogActionSheet bancalId={bancal.id} bancalName={bancal.name}
           onClose={() => setShowLogSheet(false)}
-          onSuccess={() => { setShowLogSheet(false); refetchLogs(); }}
-        />
+          onSuccess={() => { setShowLogSheet(false); refetchLogs(); }} />
       )}
-
-      {/* Confirm dialog */}
-      {confirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setConfirm(null)}>
-          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} />
-          <div className="relative rounded-xl p-5 max-w-xs w-full text-center"
-            style={{ background: 'var(--earth-800)' }}
-            onClick={(e) => e.stopPropagation()}>
-            <p className="text-sm mb-4" style={{ color: 'var(--earth-50)' }}>
-              ¿Marcar como {confirm.status === 'harvested' ? 'cosechado' : confirm.status === 'failed' ? 'fallido' : 'retirado'}?
-            </p>
-            <div className="flex gap-2">
-              <button onClick={() => setConfirm(null)}
-                className="flex-1 py-2 rounded-lg text-sm cursor-pointer"
-                style={{ background: 'transparent', border: '1px solid var(--earth-600)', color: 'var(--earth-200)' }}>
-                Cancelar
-              </button>
-              <button onClick={confirmStatusChange}
-                className="flex-1 py-2 rounded-lg text-sm font-medium border-none cursor-pointer"
-                style={{ background: 'var(--green-600)', color: 'white' }}>
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
+      {finalizing && finalizingPlanting && (
+        <FinalizeModal planting={finalizingPlanting} status={finalizing.status}
+          onConfirm={handleFinalize}
+          onClose={() => setFinalizing(null)} />
       )}
     </div>
   );
@@ -270,7 +411,7 @@ function BancalList() {
   const special = bancales.filter((b) => b.type === 'greenhouse' || b.type === 'patatal');
 
   const sortByStatus = (a: Bancal, b: Bancal) => {
-    const order: Record<string, number> = { planted: 0, fallow: 1, empty: 2, resting: 3 };
+    const order: Record<string, number> = { planted: 0, chickens: 1, waiting_chickens: 2, fallow: 3, post_chickens: 4, available: 5, empty: 6, resting: 7 };
     return (order[a.status] ?? 9) - (order[b.status] ?? 9);
   };
 
@@ -297,7 +438,7 @@ function BancalGroup({ title, bancales, getActivePlantings }: {
       <h3 className="text-sm font-semibold mb-2 mt-0" style={{ color: 'var(--earth-400)' }}>{title}</h3>
       <div className="flex flex-col gap-2">
         {bancales.map((b) => {
-          const badge = STATUS_BADGE[b.status];
+          const badge = STATUS_BADGE[b.status] ?? { bg: 'var(--earth-200)', text: 'var(--earth-800)', label: b.status };
           const active = getActivePlantings(b.id);
           return (
             <Link key={b.id} to={`/bancal/${b.id}`}
