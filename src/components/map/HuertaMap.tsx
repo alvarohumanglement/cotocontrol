@@ -22,7 +22,7 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
       width="100%"
       style={{ maxWidth: '960px', display: 'block' }}
       role="img"
-      aria-label="Mapa de la huerta comunitaria"
+      aria-label="Mapa de CotoControl"
     >
       {/* SVG styles for hover */}
       <defs>

@@ -45,21 +45,29 @@ export function BancalShape({ bancal, plantings, onClick }: BancalShapeProps) {
   const isChickens = status === 'chickens' || status === 'waiting_chickens' || status === 'post_chickens';
   const label = isChickens ? `${id} 🐔` : id;
 
-  // Irrigation lines
+  // Irrigation lines — rendered based on bancal.irrigation_lines count
   const irrigationLines = () => {
+    const n = bancal.irrigation_lines;
     const props = { stroke: 'var(--water)', strokeWidth: 1, strokeDasharray: '3 3', opacity: 0.5, style: { pointerEvents: 'none' as const } };
     if (isVertical) {
-      return <line x1={w / 2} y1={4} x2={w / 2} y2={h - 4} {...props} />;
+      // Vertical: lines run vertically, spaced horizontally
+      return Array.from({ length: n }, (_, i) => {
+        const lx = (w / (n + 1)) * (i + 1);
+        return <line key={i} x1={lx} y1={4} x2={lx} y2={h - 4} {...props} />;
+      });
     }
     if (isLarge) {
-      return (
-        <>
-          <line x1={4} y1={8} x2={w - 4} y2={8} {...props} />
-          <line x1={4} y1={15} x2={w - 4} y2={15} {...props} />
-        </>
-      );
+      // Horizontal large: lines spaced vertically
+      return Array.from({ length: n }, (_, i) => {
+        const ly = (h / (n + 1)) * (i + 1);
+        return <line key={i} x1={4} y1={ly} x2={w - 4} y2={ly} {...props} />;
+      });
     }
-    return <line x1={rx + 4} y1={0} x2={rx + w - 4} y2={0} {...props} />;
+    // Circle bancales: lines run along the length (horizontal in local coords), spaced by height
+    return Array.from({ length: n }, (_, i) => {
+      const ly = ry + (h / (n + 1)) * (i + 1);
+      return <line key={i} x1={rx + 4} y1={ly} x2={rx + w - 4} y2={ly} {...props} />;
+    });
   };
 
   // Label

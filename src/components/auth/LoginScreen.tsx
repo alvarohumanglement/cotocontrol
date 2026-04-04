@@ -14,7 +14,7 @@ export function LoginScreen() {
           className="text-3xl mb-1"
           style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--earth-50)' }}
         >
-          Huerta Comunitaria
+          CotoControl
         </h1>
         <p className="text-sm mb-8" style={{ color: 'var(--earth-400)' }}>
           ¿Quién eres?

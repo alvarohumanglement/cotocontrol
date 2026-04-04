@@ -128,7 +128,7 @@ export function SettingsPage() {
       </button>
 
       <p className="text-center text-xs mt-6" style={{ color: 'var(--earth-600)' }}>
-        Huerta Tracker v1.0
+        CotoControl v1.0
       </p>
     </div>
   );

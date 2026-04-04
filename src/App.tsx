@@ -17,7 +17,7 @@ function SplashScreen() {
         className="text-2xl m-0"
         style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--earth-50)' }}
       >
-        Huerta Comunitaria
+        CotoControl
       </h1>
       <div
         className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"

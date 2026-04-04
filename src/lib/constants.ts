@@ -16,20 +16,20 @@ export const BANCAL_STATES: Record<string, { label: string; emoji: string; color
 };
 
 export const BANCALES: Bancal[] = [
-  // Círculo B1-B9 (5m × 1.2m, 1 línea riego)
-  { id: 'B1',  name: 'Bancal 1',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 370, position_y: 302, rotation: 0,   status: 'planted' },
-  { id: 'B2',  name: 'Bancal 2',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 459, position_y: 334, rotation: 40,  status: 'planted' },
-  { id: 'B3',  name: 'Bancal 3',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 506, position_y: 416, rotation: 80,  status: 'planted' },
-  { id: 'B4',  name: 'Bancal 4',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 490, position_y: 509, rotation: 120, status: 'empty' },
-  { id: 'B5',  name: 'Bancal 5',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 417, position_y: 570, rotation: 160, status: 'empty' },
-  { id: 'B6',  name: 'Bancal 6',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 323, position_y: 570, rotation: 200, status: 'planted' },
-  { id: 'B7',  name: 'Bancal 7',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 250, position_y: 509, rotation: 240, status: 'planted' },
-  { id: 'B8',  name: 'Bancal 8',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 234, position_y: 416, rotation: 280, status: 'fallow' },
-  { id: 'B9',  name: 'Bancal 9',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 281, position_y: 334, rotation: 320, status: 'empty' },
+  // Círculo B1-B9 (5m × 1.2m, 2 líneas riego) — reloj: B1 a y25, clockwise hasta B9 a y15
+  { id: 'B1',  name: 'Bancal 1',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 439, position_y: 560, rotation: 150, status: 'planted' },
+  { id: 'B2',  name: 'Bancal 2',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 352, position_y: 577, rotation: 188, status: 'planted' },
+  { id: 'B3',  name: 'Bancal 3',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 272, position_y: 538, rotation: 225, status: 'planted' },
+  { id: 'B4',  name: 'Bancal 4',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 233, position_y: 458, rotation: 263, status: 'empty' },
+  { id: 'B5',  name: 'Bancal 5',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 251, position_y: 371, rotation: 300, status: 'empty' },
+  { id: 'B6',  name: 'Bancal 6',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 317, position_y: 313, rotation: 338, status: 'planted' },
+  { id: 'B7',  name: 'Bancal 7',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 406, position_y: 307, rotation: 15,  status: 'planted' },
+  { id: 'B8',  name: 'Bancal 8',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 480, position_y: 356, rotation: 53,  status: 'fallow' },
+  { id: 'B9',  name: 'Bancal 9',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 508, position_y: 440, rotation: 90,  status: 'empty' },
 
-  // B10, B11 — Lateral izquierdo superior
-  { id: 'B10', name: 'Bancal 10', type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 66,  position_y: 200, rotation: 90,  status: 'planted' },
-  { id: 'B11', name: 'Bancal 11', type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 98,  position_y: 200, rotation: 90,  status: 'empty' },
+  // B10, B11 — Lateral izquierdo superior (2 líneas riego)
+  { id: 'B10', name: 'Bancal 10', type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 66,  position_y: 200, rotation: 90,  status: 'planted' },
+  { id: 'B11', name: 'Bancal 11', type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 98,  position_y: 200, rotation: 90,  status: 'empty' },
 
   // Bancales grandes (10m × 1.2m, 2 líneas riego)
   { id: 'B12', name: 'Bancal 12', type: 'large', width_m: 1.2, length_m: 10, irrigation_lines: 2, position_x: 710, position_y: 613, rotation: 0,  status: 'planted' },

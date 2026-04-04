@@ -16,7 +16,7 @@ export function AppShell() {
           className="text-xl m-0"
           style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--earth-50)' }}
         >
-          Huerta Comunitaria
+          CotoControl
         </h1>
         {profile && (
           <div className="flex items-center gap-2">

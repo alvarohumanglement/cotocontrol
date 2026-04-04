@@ -10,9 +10,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Huerta Comunitaria',
-        short_name: 'Huerta',
-        description: 'Gestión de bancales y cultivos',
+        name: 'CotoControl',
+        short_name: 'CotoControl',
+        description: 'Gestión de bancales y cultivos de la huerta comunitaria',
         theme_color: '#1E1A14',
         background_color: '#1E1A14',
         display: 'standalone',
