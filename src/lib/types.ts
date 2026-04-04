@@ -1,5 +1,5 @@
 export type BancalType = 'small' | 'large' | 'greenhouse' | 'patatal';
-export type BancalStatus = 'empty' | 'planted' | 'fallow' | 'resting';
+export type BancalStatus = 'empty' | 'planted' | 'fallow' | 'resting' | 'available' | 'chickens' | 'waiting_chickens' | 'post_chickens';
 export type PlantingStatus = 'active' | 'harvested' | 'failed' | 'removed';
 export type ActionType =
   | 'planted'
@@ -11,6 +11,8 @@ export type ActionType =
   | 'treated'
   | 'observed'
   | 'soil_work'
+  | 'chickens_in'
+  | 'chickens_out'
   | 'other';
 
 export interface Bancal {

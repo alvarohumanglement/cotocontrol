@@ -28,10 +28,10 @@ function SplashScreen() {
 }
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { profile, loading } = useAuth();
 
   if (loading) return <SplashScreen />;
-  if (!user) return <LoginScreen />;
+  if (!profile) return <LoginScreen />;
 
   return (
     <Routes>

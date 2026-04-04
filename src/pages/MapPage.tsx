@@ -8,8 +8,8 @@ export function MapPage() {
 
   const loading = bLoading || pLoading;
   const planted = bancales.filter((b) => b.status === 'planted').length;
-  const empty = bancales.filter((b) => b.status === 'empty').length;
-  const fallow = bancales.filter((b) => b.status === 'fallow').length;
+  const empty = bancales.filter((b) => b.status === 'empty' || b.status === 'available' || b.status === 'post_chickens').length;
+  const chickens = bancales.filter((b) => b.status === 'chickens' || b.status === 'waiting_chickens' || b.status === 'fallow').length;
 
   return (
     <div className="flex flex-col h-full">
@@ -32,7 +32,7 @@ export function MapPage() {
         </span>
         <span className="text-xs font-medium px-2 py-0.5 rounded-full"
           style={{ background: 'var(--orange-900)', color: 'var(--orange-200)' }}>
-          {fallow} en barbecho
+          {chickens} 🐔 gallinas
         </span>
       </div>
 

@@ -1,26 +1,28 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useId } from 'react';
 import { supabase } from '../lib/supabase';
 import { MOCK_PLANTINGS } from '../lib/constants';
 import type { Planting } from '../lib/types';
 import { useAuth } from './useAuth';
 
 export function usePlantings(bancalId?: string) {
-  const { user } = useAuth();
+  const channelId = useId();
+  const { profile } = useAuth();
   const fallback = bancalId
     ? MOCK_PLANTINGS.filter((p) => p.bancal_id === bancalId)
     : MOCK_PLANTINGS;
-  const [plantings, setPlantings] = useState<Planting[]>(fallback);
+  const [plantings, setPlantings] = useState<Planting[]>(supabase ? [] : fallback);
   const [loading, setLoading] = useState(!!supabase);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!supabase) return;
     let query = supabase.from('plantings').select('*').order('created_at', { ascending: false });
     if (bancalId) query = query.eq('bancal_id', bancalId);
     const { data, error: err } = await query;
     if (err) {
       setError(err.message);
-    } else if (data) {
+      setPlantings(fallback);
+    } else {
       setPlantings(data as Planting[]);
       setError(null);
     }
@@ -28,19 +30,19 @@ export function usePlantings(bancalId?: string) {
   }, [bancalId]);
 
   useEffect(() => {
-    fetch();
+    fetchData();
 
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`plantings-${bancalId ?? 'all'}`)
+      .channel(`plantings-${channelId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'plantings' }, () => {
-        fetch();
+        fetchData();
       })
       .subscribe();
 
     return () => { supabase!.removeChannel(channel); };
-  }, [fetch, bancalId]);
+  }, [fetchData, channelId]);
 
   const addPlanting = async (data: Omit<Planting, 'id' | 'created_at' | 'updated_at'>) => {
     if (!supabase) {
@@ -55,7 +57,7 @@ export function usePlantings(bancalId?: string) {
     }
     const { error: err } = await supabase
       .from('plantings')
-      .insert({ ...data, created_by: user?.id });
+      .insert({ ...data, created_by: profile?.id });
     if (err) {
       setError(err.message);
       throw new Error(err.message);
@@ -77,5 +79,5 @@ export function usePlantings(bancalId?: string) {
     }
   };
 
-  return { plantings, loading, error, addPlanting, updatePlanting, refetch: fetch };
+  return { plantings, loading, error, addPlanting, updatePlanting, refetch: fetchData };
 }

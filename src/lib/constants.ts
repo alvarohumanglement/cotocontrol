@@ -1,4 +1,11 @@
-import type { Bancal, Planting, ActivityLog, ActionType } from './types';
+import type { Bancal, Planting, ActivityLog, ActionType, Profile } from './types';
+
+export const COMUNEROS: Profile[] = [
+  { id: 'c1', display_name: 'Álvaro',  avatar_color: '#5A9A22', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'c2', display_name: 'María',   avatar_color: '#E07B1A', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'c3', display_name: 'Pablo',   avatar_color: '#8060CC', created_at: '2026-01-01T00:00:00Z' },
+  { id: 'c4', display_name: 'Lucía',   avatar_color: '#4AA3CC', created_at: '2026-01-01T00:00:00Z' },
+];
 
 export const BANCALES: Bancal[] = [
   // Círculo B1-B9 (5m × 1.2m, 1 línea riego)
@@ -36,8 +43,10 @@ export const ACTION_TYPES: Record<ActionType, { label: string; emoji: string; co
   pruned:     { label: 'Podado',        emoji: '✂️', color: 'var(--earth-400)' },
   treated:    { label: 'Tratamiento',   emoji: '🧪', color: 'var(--purple-400)' },
   observed:   { label: 'Observación',   emoji: '👁️', color: 'var(--earth-400)' },
-  soil_work:  { label: 'Trabajo suelo', emoji: '⛏️', color: 'var(--orange-600)' },
-  other:      { label: 'Otro',          emoji: '📝', color: 'var(--earth-400)' },
+  soil_work:     { label: 'Trabajo suelo',    emoji: '⛏️', color: 'var(--orange-600)' },
+  chickens_in:   { label: 'Gallinas entran',  emoji: '🐔', color: 'var(--orange-400)' },
+  chickens_out:  { label: 'Gallinas salen',   emoji: '🐔', color: 'var(--green-200)' },
+  other:         { label: 'Otro',             emoji: '📝', color: 'var(--earth-400)' },
 };
 
 export const MOCK_PLANTINGS: Planting[] = [

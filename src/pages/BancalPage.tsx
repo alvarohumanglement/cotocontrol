@@ -19,10 +19,14 @@ function formatDateTime(iso: string): string {
 }
 
 const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  planted: { bg: 'var(--green-50)', text: 'var(--green-800)', label: 'Plantado' },
-  empty:   { bg: 'var(--earth-200)', text: 'var(--earth-800)', label: 'Libre' },
-  fallow:  { bg: 'var(--orange-50)', text: 'var(--orange-800)', label: 'Barbecho' },
-  resting: { bg: 'var(--earth-200)', text: 'var(--earth-800)', label: 'Descanso' },
+  planted:          { bg: 'var(--green-50)',   text: 'var(--green-800)',  label: 'Plantado' },
+  empty:            { bg: 'var(--earth-200)',  text: 'var(--earth-800)',  label: 'Libre' },
+  available:        { bg: 'var(--earth-200)',  text: 'var(--earth-800)',  label: 'Disponible' },
+  fallow:           { bg: 'var(--orange-50)',  text: 'var(--orange-800)', label: 'Barbecho' },
+  chickens:         { bg: 'var(--orange-50)',  text: 'var(--orange-800)', label: '🐔 Gallinas' },
+  waiting_chickens: { bg: 'var(--orange-50)',  text: 'var(--orange-800)', label: '🐔 Esperando gallinas' },
+  post_chickens:    { bg: 'var(--green-50)',   text: 'var(--green-800)',  label: 'Post-gallinas' },
+  resting:          { bg: 'var(--earth-200)',  text: 'var(--earth-800)',  label: 'Descanso' },
 };
 
 /* ── Planting Card with harvest actions ── */
@@ -95,8 +99,7 @@ function PlantingCard({ planting, onStatusChange }: {
 function BancalDetail({ bancal }: { bancal: Bancal }) {
   const navigate = useNavigate();
   const { plantings, updatePlanting, refetch: refetchPlantings } = usePlantings(bancal.id);
-  const { logs, refetch: refetchLogs } = useActivityLogs(bancal.id);
-  const { addLog } = useActivityLogs(bancal.id);
+  const { logs, addLog, refetch: refetchLogs } = useActivityLogs(bancal.id);
   const { updateBancalStatus } = useBancales();
   const [showPlantingForm, setShowPlantingForm] = useState(false);
   const [showLogSheet, setShowLogSheet] = useState(false);
@@ -104,7 +107,7 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
 
   const activePlantings = plantings.filter((p) => p.status === 'active');
   const recentLogs = logs.slice(0, 10);
-  const badge = STATUS_BADGE[bancal.status];
+  const badge = STATUS_BADGE[bancal.status] ?? { bg: 'var(--earth-200)', text: 'var(--earth-800)', label: bancal.status };
 
   const handleStatusChange = (id: string, status: 'harvested' | 'failed' | 'removed') => {
     setConfirm({ id, status });
@@ -179,7 +182,7 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
       ) : (
         <div className="flex flex-col gap-2 mb-6">
           {recentLogs.map((log) => {
-            const at = ACTION_TYPES[log.action];
+            const at = ACTION_TYPES[log.action] ?? { label: log.action, emoji: '📝', color: 'var(--earth-400)' };
             return (
               <div key={log.id} className="flex gap-3 items-start">
                 <span className="text-base shrink-0 mt-0.5">{at.emoji}</span>

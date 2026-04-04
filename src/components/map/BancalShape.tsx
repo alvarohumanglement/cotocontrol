@@ -41,8 +41,9 @@ export function BancalShape({ bancal, plantings, onClick }: BancalShapeProps) {
 
   const rx = isCircle ? -w / 2 : 0;
   const ry = isCircle ? -h / 2 : 0;
-  const fillOpacity = status === 'fallow' ? 0.8 : 1;
-  const label = id === 'B8' ? 'B8 🐔' : id;
+  const fillOpacity = (status === 'fallow' || status === 'chickens') ? 0.8 : 1;
+  const isChickens = status === 'chickens' || status === 'waiting_chickens' || status === 'post_chickens';
+  const label = isChickens ? `${id} 🐔` : id;
 
   // Irrigation lines
   const irrigationLines = () => {

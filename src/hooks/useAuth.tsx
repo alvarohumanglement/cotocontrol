@@ -1,84 +1,51 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { Profile } from '../lib/types';
+import { COMUNEROS } from '../lib/constants';
 
 interface AuthContextType {
-  user: User | null;
   profile: Profile | null;
   loading: boolean;
-  signIn: (email: string) => Promise<{ error?: string }>;
-  signOut: () => Promise<void>;
+  selectProfile: (id: string) => void;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: null,
   profile: null,
   loading: true,
-  signIn: async () => ({}),
-  signOut: async () => {},
+  selectProfile: () => {},
+  signOut: () => {},
 });
 
+const STORAGE_KEY = 'huerta-profile-id';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
-    if (!supabase) return;
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (data) setProfile(data as Profile);
-  };
-
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
+    const savedId = localStorage.getItem(STORAGE_KEY);
+    if (savedId) {
+      const found = COMUNEROS.find((c) => c.id === savedId);
+      if (found) setProfile(found);
     }
-
-    // Check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const u = session?.user ?? null;
-      setUser(u);
-      if (u) fetchProfile(u.id);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user ?? null;
-      setUser(u);
-      if (u) {
-        fetchProfile(u.id);
-      } else {
-        setProfile(null);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    setLoading(false);
   }, []);
 
-  const signIn = async (email: string): Promise<{ error?: string }> => {
-    if (!supabase) return { error: 'Supabase no configurado' };
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) return { error: error.message };
-    return {};
+  const selectProfile = (id: string) => {
+    const found = COMUNEROS.find((c) => c.id === id);
+    if (found) {
+      setProfile(found);
+      localStorage.setItem(STORAGE_KEY, id);
+    }
   };
 
-  const signOut = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-    setUser(null);
+  const signOut = () => {
     setProfile(null);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ profile, loading, selectProfile, signOut }}>
       {children}
     </AuthContext.Provider>
   );

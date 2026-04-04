@@ -1,14 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useId } from 'react';
 import { supabase } from '../lib/supabase';
 import { BANCALES } from '../lib/constants';
 import type { Bancal, BancalStatus } from '../lib/types';
 
 export function useBancales() {
-  const [bancales, setBancales] = useState<Bancal[]>(BANCALES);
+  const channelId = useId();
+  const [bancales, setBancales] = useState<Bancal[]>(supabase ? [] : BANCALES);
   const [loading, setLoading] = useState(!!supabase);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!supabase) return;
     const { data, error: err } = await supabase
       .from('bancales')
@@ -16,7 +17,9 @@ export function useBancales() {
       .order('id');
     if (err) {
       setError(err.message);
-    } else if (data) {
+      // Fallback to local on error
+      setBancales(BANCALES);
+    } else {
       setBancales(data as Bancal[]);
       setError(null);
     }
@@ -24,19 +27,19 @@ export function useBancales() {
   }, []);
 
   useEffect(() => {
-    fetch();
+    fetchData();
 
     if (!supabase) return;
 
     const channel = supabase
-      .channel('bancales-changes')
+      .channel(`bancales-${channelId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bancales' }, () => {
-        fetch();
+        fetchData();
       })
       .subscribe();
 
     return () => { supabase!.removeChannel(channel); };
-  }, [fetch]);
+  }, [fetchData, channelId]);
 
   const updateBancalStatus = async (id: string, status: BancalStatus) => {
     if (!supabase) {
@@ -50,5 +53,5 @@ export function useBancales() {
     if (err) setError(err.message);
   };
 
-  return { bancales, loading, error, updateBancalStatus, refetch: fetch };
+  return { bancales, loading, error, updateBancalStatus, refetch: fetchData };
 }

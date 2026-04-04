@@ -48,6 +48,22 @@ export function HuertaMap({ bancales, plantings }: HuertaMapProps) {
           .bancal-g[data-status="resting"]:hover .bancal-rect,
           .bancal-g[data-status="resting"]:focus .bancal-rect { fill: var(--earth-600); stroke: var(--earth-400); }
 
+          .bancal-g[data-status="available"] .bancal-rect { fill: var(--earth-800); stroke: var(--earth-600); }
+          .bancal-g[data-status="available"]:hover .bancal-rect,
+          .bancal-g[data-status="available"]:focus .bancal-rect { fill: var(--earth-600); stroke: var(--earth-400); }
+
+          .bancal-g[data-status="chickens"] .bancal-rect { fill: var(--orange-400); stroke: var(--orange-600); }
+          .bancal-g[data-status="chickens"]:hover .bancal-rect,
+          .bancal-g[data-status="chickens"]:focus .bancal-rect { fill: var(--orange-200); stroke: var(--orange-400); }
+
+          .bancal-g[data-status="waiting_chickens"] .bancal-rect { fill: var(--orange-800); stroke: var(--orange-600); }
+          .bancal-g[data-status="waiting_chickens"]:hover .bancal-rect,
+          .bancal-g[data-status="waiting_chickens"]:focus .bancal-rect { fill: var(--orange-600); stroke: var(--orange-400); }
+
+          .bancal-g[data-status="post_chickens"] .bancal-rect { fill: var(--green-900); stroke: var(--green-600); }
+          .bancal-g[data-status="post_chickens"]:hover .bancal-rect,
+          .bancal-g[data-status="post_chickens"]:focus .bancal-rect { fill: var(--green-800); stroke: var(--green-400); }
+
           .zone-g { outline: none; }
           .zone-g rect { transition: all 0.25s ease; }
           .zone-g:hover rect, .zone-g:focus rect { filter: brightness(1.3); }

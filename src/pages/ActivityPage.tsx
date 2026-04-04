@@ -58,7 +58,7 @@ export function ActivityPage() {
               </div>
 
               {group.logs.map((log) => {
-                const at = ACTION_TYPES[log.action];
+                const at = ACTION_TYPES[log.action] ?? { label: log.action, emoji: '📝', color: 'var(--earth-400)' };
                 const bancal = bancales.find((b) => b.id === log.bancal_id);
 
                 return (
