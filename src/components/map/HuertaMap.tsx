@@ -18,7 +18,7 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
 
   return (
     <svg
-      viewBox="20 15 940 680"
+      viewBox="0 -70 390 500"
       width="100%"
       preserveAspectRatio="xMidYMid meet"
       style={{ display: 'block', maxHeight: 'calc(100vh - 180px)' }}
@@ -27,8 +27,8 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
     >
       {/* SVG styles for hover */}
       <defs>
-        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(232,213,183,0.03)" strokeWidth={0.5} />
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(232,213,183,0.03)" strokeWidth={0.5} />
         </pattern>
         <style>{`
           .bancal-g { outline: none; }
@@ -73,7 +73,7 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
       </defs>
 
       {/* Grid background */}
-      <rect width="960" height="750" fill="url(#grid)" />
+      <rect x="0" y="-70" width="390" height="500" fill="url(#grid)" />
 
       {/* ── PATATAL ── */}
       <g
@@ -82,23 +82,23 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
         onKeyDown={(e) => { if (e.key === 'Enter') handleClick('PAT'); }}
         role="button" tabIndex={0} cursor="pointer"
       >
-        <text x={310} y={25} textAnchor="middle"
+        <text x={130} y={8} textAnchor="middle"
           fill="var(--earth-50)" opacity={0.5} fontSize={13}
           fontFamily="'DM Serif Display', serif"
           style={{ pointerEvents: 'none' }}>
           PATATAL
         </text>
-        <rect x={200} y={35} width={220} height={100} rx={6}
+        <rect x={45} y={16} width={170} height={60} rx={6}
           fill="var(--orange-400)" fillOpacity={0.2}
           stroke="var(--orange-600)" strokeWidth={1.5} strokeDasharray="6 4" />
         {/* 5 planting rows */}
         {[0, 1, 2, 3, 4].map((i) => (
           <line key={i}
-            x1={210} y1={50 + i * 20} x2={410} y2={50 + i * 20}
+            x1={50} y1={24 + i * 12} x2={210} y2={24 + i * 12}
             stroke="var(--orange-600)" strokeWidth={0.8} strokeDasharray="4 6" opacity={0.4}
             style={{ pointerEvents: 'none' }} />
         ))}
-        <text x={310} y={145} textAnchor="middle"
+        <text x={130} y={86} textAnchor="middle"
           fill="var(--earth-400)" fontSize={9}
           fontFamily="'IBM Plex Mono', monospace"
           style={{ pointerEvents: 'none' }}>
@@ -113,31 +113,30 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
         onKeyDown={(e) => { if (e.key === 'Enter') handleClick('INV'); }}
         role="button" tabIndex={0} cursor="pointer"
       >
-        <text x={790} y={70} textAnchor="middle"
+        <text x={277} y={92} textAnchor="middle"
           fill="var(--earth-50)" opacity={0.5} fontSize={13}
           fontFamily="'DM Serif Display', serif"
           style={{ pointerEvents: 'none' }}>
           INVERNADERO
         </text>
-        <rect x={680} y={80} width={220} height={140} rx={6}
+        <rect x={225} y={100} width={105} height={70} rx={6}
           fill="var(--purple-400)" fillOpacity={0.15}
           stroke="var(--purple-600)" strokeWidth={1.5} strokeDasharray="6 4" />
-        {/* 5 irrigation lines with drip points */}
+        {/* Irrigation lines with drip points */}
         {[0, 1, 2, 3, 4].map((i) => {
-          const lineY = 100 + i * 25;
+          const lineY = 110 + i * 12;
           return (
             <g key={i} style={{ pointerEvents: 'none' }}>
-              <line x1={690} y1={lineY} x2={890} y2={lineY}
+              <line x1={230} y1={lineY} x2={325} y2={lineY}
                 stroke="var(--water)" strokeWidth={0.8} strokeDasharray="3 3" opacity={0.5} />
-              {/* Drip points */}
-              {Array.from({ length: 6 }, (_, j) => (
-                <circle key={j} cx={705 + j * 35} cy={lineY} r={1.5}
+              {Array.from({ length: 4 }, (_, j) => (
+                <circle key={j} cx={240 + j * 25} cy={lineY} r={1.5}
                   fill="var(--water)" opacity={0.6} />
               ))}
             </g>
           );
         })}
-        <text x={790} y={232} textAnchor="middle"
+        <text x={277} y={180} textAnchor="middle"
           fill="var(--earth-400)" fontSize={9}
           fontFamily="'IBM Plex Mono', monospace"
           style={{ pointerEvents: 'none' }}>
@@ -146,11 +145,11 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
       </g>
 
       {/* ── CIRCLE GUIDE (centro B1-B9) ── */}
-      <circle cx={370} cy={440} r={138}
+      <circle cx={160} cy={330} r={100}
         fill="none" stroke="var(--earth-800)" strokeWidth={0.5}
         strokeDasharray="4 8" opacity={0.3} />
       {/* Small central circle */}
-      <circle cx={370} cy={440} r={22}
+      <circle cx={160} cy={330} r={7}
         fill="var(--earth-800)" fillOpacity={0.3}
         stroke="var(--earth-600)" strokeWidth={0.5} />
 
@@ -165,7 +164,7 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
       ))}
 
       {/* ── WATERING INDICATORS ── */}
-      {waterMap && bancales.filter((b) => b.type === 'small' && b.id !== 'B10' && b.id !== 'B11').map((b) => {
+      {waterMap && bancales.filter((b) => b.type === 'small' && b.id !== 'B10' && b.id !== 'B11' && b.id !== 'LFR').map((b) => {
         const label = waterMap.getLabel(b.id);
         if (!label) return null;
         const days = waterMap.getDays(b.id) ?? 0;
@@ -183,7 +182,7 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
 
       {/* ── DIMENSION LABELS ── */}
       {/* B10/B11 */}
-      <text x={76} y={255} textAnchor="middle"
+      <text x={33} y={196} textAnchor="middle"
         fill="var(--earth-400)" fontSize={9}
         fontFamily="'IBM Plex Mono', monospace"
         style={{ pointerEvents: 'none' }}>
@@ -191,7 +190,7 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
       </text>
 
       {/* B12/B13 */}
-      <text x={710} y={665} textAnchor="middle"
+      <text x={173} y={508} textAnchor="middle"
         fill="var(--earth-400)" fontSize={9}
         fontFamily="'IBM Plex Mono', monospace"
         style={{ pointerEvents: 'none' }}>
@@ -199,11 +198,11 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
       </text>
 
       {/* B14/B15 */}
-      <text x={790} y={385} textAnchor="middle"
+      <text x={358} y={383} textAnchor="start"
         fill="var(--earth-400)" fontSize={9}
         fontFamily="'IBM Plex Mono', monospace"
         style={{ pointerEvents: 'none' }}>
-        10m × 1.2m · 2 líneas riego
+        10m × 1.2m
       </text>
     </svg>
   );
