@@ -136,9 +136,17 @@ export function SettingsPage() {
         Cambiar de comunero
       </button>
 
-      <p className="text-center text-xs mt-6" style={{ color: 'var(--earth-600)' }}>
+      <p className="text-center text-xs mt-6 mb-2" style={{ color: 'var(--earth-600)' }}>
         CotoControl v{APP_VERSION}
       </p>
+      <div className="text-center" style={{ opacity: 0.5, borderTop: '1px solid var(--earth-800)', paddingTop: 8, marginTop: 4 }}>
+        <p className="m-0 text-center" style={{ fontSize: 11, color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
+          hecho con cariño por Álvaro
+        </p>
+        <p className="m-0 mt-1 text-center" style={{ fontSize: 11, color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
+          QX0T — acc/e
+        </p>
+      </div>
 
       {/* Feedback sheet */}
       {showFeedback && (

@@ -93,5 +93,32 @@ export function usePlantings(bancalId?: string) {
     }
   };
 
-  return { plantings, loading, error, addPlanting, updatePlanting, deletePlanting, refetch: fetchData };
+  const deleteFinishedPlantings = async (bancalId: string) => {
+    if (!supabase) {
+      setPlantings((prev) => prev.filter((p) => !(p.bancal_id === bancalId && p.status !== 'active')));
+      return;
+    }
+    // 1. Get finished planting IDs
+    const { data: finished } = await supabase
+      .from('plantings')
+      .select('id')
+      .eq('bancal_id', bancalId)
+      .in('status', ['harvested', 'failed', 'removed']);
+    if (!finished || finished.length === 0) return;
+    const ids = finished.map((p) => p.id);
+    // 2. Delete associated logs
+    const { error: logErr } = await supabase
+      .from('activity_logs')
+      .delete()
+      .in('planting_id', ids);
+    if (logErr) { setError(logErr.message); throw new Error(logErr.message); }
+    // 3. Delete plantings
+    const { error: plantErr } = await supabase
+      .from('plantings')
+      .delete()
+      .in('id', ids);
+    if (plantErr) { setError(plantErr.message); throw new Error(plantErr.message); }
+  };
+
+  return { plantings, loading, error, addPlanting, updatePlanting, deletePlanting, deleteFinishedPlantings, refetch: fetchData };
 }

@@ -308,7 +308,7 @@ function BancalStateSelector({ bancal, onStateChange }: {
 function BancalDetail({ bancal }: { bancal: Bancal }) {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { plantings, updatePlanting, deletePlanting, refetch: refetchPlantings } = usePlantings(bancal.id);
+  const { plantings, updatePlanting, deletePlanting, deleteFinishedPlantings, refetch: refetchPlantings } = usePlantings(bancal.id);
   const { logs, addLog, deleteLog, refetch: refetchLogs } = useActivityLogs(bancal.id);
   const { updateBancalStatus, refetch: refetchBancales } = useBancales();
   const { getLabel: getWaterLabel } = useLastWatered(logs);
@@ -319,6 +319,7 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
   const [showHistory, setShowHistory] = useState(false);
   const [stateConfirm, setStateConfirm] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'planting' | 'log'; id: string; label: string } | null>(null);
+  const [showDeleteHistory, setShowDeleteHistory] = useState(false);
 
   const activePlantings = plantings.filter((p) => p.status === 'active');
   const historyPlantings = plantings
@@ -529,11 +530,16 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
         {showHistory && (
           historyPlantings.length === 0 ? (
             <p className="text-xs pl-6" style={{ color: 'var(--earth-400)' }}>Sin cultivos anteriores</p>
-          ) : (
+          ) : (<>
             <div className="flex flex-col gap-1.5">
               {historyPlantings.map((p) => <HistoryCard key={p.id} planting={p} />)}
             </div>
-          )
+            <button onClick={() => setShowDeleteHistory(true)}
+              className="w-full text-xs py-2 mt-2 rounded-lg cursor-pointer border-none"
+              style={{ background: 'var(--earth-900)', color: 'var(--alert)', opacity: 0.7 }}>
+              🗑️ Borrar historial
+            </button>
+          </>)
         )}
       </div>
 
@@ -615,6 +621,39 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
                 Cancelar
               </button>
               <button onClick={confirmDelete}
+                className="flex-1 py-2 rounded-lg text-sm font-medium border-none cursor-pointer"
+                style={{ background: 'var(--alert)', color: 'white' }}>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete history confirm */}
+      {showDeleteHistory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setShowDeleteHistory(false)}>
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} />
+          <div className="relative rounded-xl p-5 max-w-xs w-full text-center mx-4"
+            style={{ background: 'var(--earth-800)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm mb-1" style={{ color: 'var(--earth-50)' }}>
+              ¿Eliminar todo el historial de cultivos finalizados de este bancal?
+            </p>
+            <p className="text-xs mb-3" style={{ color: 'var(--alert)' }}>Esta acción no se puede deshacer.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowDeleteHistory(false)}
+                className="flex-1 py-2 rounded-lg text-sm cursor-pointer"
+                style={{ background: 'transparent', border: '1px solid var(--earth-600)', color: 'var(--earth-200)' }}>
+                Cancelar
+              </button>
+              <button onClick={async () => {
+                await deleteFinishedPlantings(bancal.id);
+                setShowDeleteHistory(false);
+                refetchPlantings();
+                refetchLogs();
+                showToast('Historial eliminado', 'success');
+              }}
                 className="flex-1 py-2 rounded-lg text-sm font-medium border-none cursor-pointer"
                 style={{ background: 'var(--alert)', color: 'white' }}>
                 Eliminar

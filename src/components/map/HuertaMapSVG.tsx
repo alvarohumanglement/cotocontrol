@@ -124,9 +124,9 @@ export default function HuertaMapSVG({ bancales, onBancalClick }: HuertaMapSVGPr
         <g key={id} className={`bancal-shape ${getStatus(id)}`} onClick={() => handleClick(id)} style={{ cursor: 'pointer' }}
            transform={`translate(${CIRCLE_CENTER.x},${CIRCLE_CENTER.y})`}>
           <g transform={`rotate(${angle})`}>
-            <rect x={-9} y={-95} width={18} height={65} rx={3} />
+            <rect x={-9} y={-95} width={18} height={65} rx={3} pointerEvents="all" />
             <line x1={0} y1={-91} x2={0} y2={-34} stroke="#4AA3CC" strokeWidth={0.5} opacity={0.3} />
-            <text x={0} y={-58} textAnchor="middle" fontSize={9} fill="#ddd4c0" fontFamily="'IBM Plex Mono', monospace"
+            <text x={0} y={-58} textAnchor="middle" dominantBaseline="central" fontSize={9} fill="#ddd4c0" fontFamily="'IBM Plex Mono', monospace" fontWeight={500}
                   transform={`rotate(${-angle})`}>{id}</text>
           </g>
         </g>
@@ -168,13 +168,17 @@ export default function HuertaMapSVG({ bancales, onBancalClick }: HuertaMapSVGPr
       </g>
       <text x={173} y={470} textAnchor="middle" fontSize={6} fill="#6b5d42" fontFamily="'IBM Plex Mono', monospace">10m × 1.2m · 2 líneas riego</text>
 
+      {/* QX0T mark */}
+      <text x={370} y={495} textAnchor="end" fontSize={4} fill="#5C5346" opacity={0.3}
+        fontFamily="'IBM Plex Mono', monospace" style={{ pointerEvents: 'none' }}>QX0T</text>
+
       {/* Textura sutil */}
       <defs>
         <pattern id="dots" x={0} y={0} width={20} height={20} patternUnits="userSpaceOnUse">
           <circle cx={10} cy={10} r={0.5} fill="#f0ebe0" />
         </pattern>
       </defs>
-      <rect x={0} y={-60} width={390} height={560} fill="url(#dots)" opacity={0.05} />
+      <rect x={0} y={-60} width={390} height={560} fill="url(#dots)" opacity={0.05} style={{ pointerEvents: 'none' }} />
     </svg>
   );
 }
