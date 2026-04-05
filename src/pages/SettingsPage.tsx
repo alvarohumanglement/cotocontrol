@@ -6,39 +6,18 @@ import { useActivityLogs } from '../hooks/useActivityLogs';
 import { COMUNEROS, APP_VERSION } from '../lib/constants';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../components/ui/Toast';
-import { useActivityLogs as useLogsForReport } from '../hooks/useActivityLogs';
+import { FeedbackSheet } from '../components/ui/FeedbackSheet';
 
 export function SettingsPage() {
   const { profile, selectProfile, signOut } = useAuth();
   const { bancales } = useBancales();
   const { plantings } = usePlantings();
   const { logs } = useActivityLogs();
-  const { addLog: addBugLog } = useLogsForReport();
   const { show: showToast, element: toastEl } = useToast();
   const [exporting, setExporting] = useState(false);
-  const [showBugReport, setShowBugReport] = useState(false);
-  const [bugText, setBugText] = useState('');
-  const [sendingBug, setSendingBug] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const activePlantings = plantings.filter((p) => p.status === 'active').length;
-
-  const handleBugReport = async () => {
-    if (!bugText.trim()) return;
-    setSendingBug(true);
-    const info = [
-      `🐛 BUG: ${bugText}`,
-      `📱 ${navigator.userAgent}`,
-      `📐 ${window.innerWidth}x${window.innerHeight}`,
-      `👤 ${profile?.display_name ?? 'anónimo'}`,
-      `🕐 ${new Date().toISOString()}`,
-      `📌 v${APP_VERSION}`,
-    ].join('\n');
-    await addBugLog({ bancal_id: 'B1', action: 'other', notes: info });
-    setSendingBug(false);
-    setShowBugReport(false);
-    setBugText('');
-    showToast('Reporte enviado. ¡Gracias!', 'success');
-  };
 
   const handleExport = async () => {
     setExporting(true);
@@ -70,7 +49,7 @@ export function SettingsPage() {
       const date = new Date().toISOString().split('T')[0];
       const a = document.createElement('a');
       a.href = url;
-      a.download = `huerta-backup-${date}.json`;
+      a.download = `cotocontrol-backup-${date}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast('Datos exportados', 'success');
@@ -143,11 +122,11 @@ export function SettingsPage() {
         {exporting ? 'Exportando...' : '📥 Exportar datos (JSON)'}
       </button>
 
-      {/* Bug report */}
-      <button onClick={() => setShowBugReport(true)}
+      {/* Feedback */}
+      <button onClick={() => setShowFeedback(true)}
         className="w-full py-2.5 rounded-lg text-sm font-medium cursor-pointer mb-3"
-        style={{ background: 'var(--earth-800)', border: '1px solid var(--orange-600)', color: 'var(--orange-200)' }}>
-        🐛 Reportar un problema
+        style={{ background: 'var(--earth-800)', border: '1px solid var(--green-600)', color: 'var(--green-200)' }}>
+        📝 Enviar feedback
       </button>
 
       {/* Sign out */}
@@ -161,34 +140,12 @@ export function SettingsPage() {
         CotoControl v{APP_VERSION}
       </p>
 
-      {/* Bug report modal */}
-      {showBugReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setShowBugReport(false)}>
-          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} />
-          <div className="relative rounded-xl p-5 max-w-sm w-full mx-4"
-            style={{ background: 'var(--earth-800)' }}
-            onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-base m-0 mb-3" style={{ fontFamily: "'DM Serif Display', serif", color: 'var(--earth-50)' }}>
-              🐛 Reportar problema
-            </h3>
-            <textarea value={bugText} onChange={(e) => setBugText(e.target.value)} rows={4}
-              placeholder="Describe qué ha pasado o qué no funciona..."
-              className="w-full rounded-lg px-3 py-2.5 outline-none resize-none mb-3 text-base"
-              style={{ background: 'var(--earth-900)', border: '1px solid var(--earth-600)', color: 'var(--earth-50)', fontSize: '16px' }} />
-            <div className="flex gap-2">
-              <button onClick={() => setShowBugReport(false)}
-                className="flex-1 py-2 rounded-lg text-sm cursor-pointer"
-                style={{ background: 'transparent', border: '1px solid var(--earth-600)', color: 'var(--earth-200)' }}>
-                Cancelar
-              </button>
-              <button onClick={handleBugReport} disabled={sendingBug || !bugText.trim()}
-                className="flex-1 py-2 rounded-lg text-sm font-medium border-none cursor-pointer"
-                style={{ background: sendingBug ? 'var(--earth-600)' : 'var(--orange-400)', color: 'white', opacity: sendingBug || !bugText.trim() ? 0.6 : 1 }}>
-                {sendingBug ? 'Enviando...' : 'Enviar reporte'}
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Feedback sheet */}
+      {showFeedback && (
+        <FeedbackSheet
+          onClose={() => setShowFeedback(false)}
+          onSuccess={() => { setShowFeedback(false); showToast('¡Gracias! Tu nota fue enviada', 'success'); }}
+        />
       )}
     </div>
   );
