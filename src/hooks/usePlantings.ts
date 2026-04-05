@@ -2,11 +2,8 @@ import { useEffect, useState, useCallback, useId } from 'react';
 import { supabase } from '../lib/supabase';
 import { MOCK_PLANTINGS } from '../lib/constants';
 import type { Planting } from '../lib/types';
-import { useAuth } from './useAuth';
-
 export function usePlantings(bancalId?: string) {
   const channelId = useId();
-  const { profile } = useAuth();
   const fallback = bancalId
     ? MOCK_PLANTINGS.filter((p) => p.bancal_id === bancalId)
     : MOCK_PLANTINGS;
@@ -55,9 +52,11 @@ export function usePlantings(bancalId?: string) {
       setPlantings((prev) => [newP, ...prev]);
       return;
     }
+    // created_by is UUID in DB — don't set with string profile IDs
+    const { created_by: _ignore, ...insertData } = data;
     const { error: err } = await supabase
       .from('plantings')
-      .insert({ ...data, created_by: profile?.id });
+      .insert(insertData);
     if (err) {
       setError(err.message);
       throw new Error(err.message);

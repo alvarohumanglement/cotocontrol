@@ -56,6 +56,7 @@ export const ACTION_TYPES: Record<ActionType, { label: string; emoji: string; co
   soil_work:     { label: 'Trabajo suelo',    emoji: '⛏️', color: 'var(--orange-600)' },
   chickens_in:   { label: 'Gallinas entran',  emoji: '🐔', color: 'var(--orange-400)' },
   chickens_out:  { label: 'Gallinas salen',   emoji: '🐔', color: 'var(--green-200)' },
+  stage_change:  { label: 'Cambio de fase',  emoji: '📈', color: 'var(--purple-200)' },
   other:         { label: 'Otro',             emoji: '📝', color: 'var(--earth-400)' },
 };
 

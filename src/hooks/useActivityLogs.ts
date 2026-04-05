@@ -2,11 +2,8 @@ import { useEffect, useState, useCallback, useId } from 'react';
 import { supabase } from '../lib/supabase';
 import { MOCK_LOGS } from '../lib/constants';
 import type { ActivityLog } from '../lib/types';
-import { useAuth } from './useAuth';
-
 export function useActivityLogs(bancalId?: string) {
   const channelId = useId();
-  const { profile } = useAuth();
   const fallback = bancalId
     ? MOCK_LOGS.filter((l) => l.bancal_id === bancalId)
     : MOCK_LOGS;
@@ -55,9 +52,12 @@ export function useActivityLogs(bancalId?: string) {
       setLogs((prev) => [newLog, ...prev]);
       return;
     }
+    // created_by is UUID in DB — don't set it with string profile IDs
+    // comunero name is tracked in notes instead
+    const { created_by: _ignore, ...insertData } = data;
     const { error: err } = await supabase
       .from('activity_logs')
-      .insert({ ...data, created_by: profile?.id });
+      .insert(insertData);
     if (err) {
       setError(err.message);
       throw new Error(err.message);

@@ -9,7 +9,7 @@ import { LogActionSheet } from '../components/bancal/LogActionSheet';
 import { useToast } from '../components/ui/Toast';
 import { useAuth } from '../hooks/useAuth';
 import { useLastWatered } from '../hooks/useLastWatered';
-import type { Bancal, Planting } from '../lib/types';
+import type { Bancal, Planting, ActivityLog } from '../lib/types';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -70,13 +70,16 @@ function StageEditor({ planting, onStageChange }: { planting: Planting; onStageC
 }
 
 /* ── Planting Card ── */
-function PlantingCard({ planting, onFinalize, onStageChange, onDelete }: {
+function PlantingCard({ planting, plantingLogs, onFinalize, onStageChange, onDelete, onDeleteLog }: {
   planting: Planting;
+  plantingLogs: ActivityLog[];
   onFinalize: (id: string, status: 'harvested' | 'failed' | 'removed') => void;
   onStageChange: (id: string, stage: number) => void;
   onDelete: (id: string) => void;
+  onDeleteLog: (id: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
   const stage = CROP_STAGES[planting.stage ?? 0];
 
   return (
@@ -143,6 +146,42 @@ function PlantingCard({ planting, onFinalize, onStageChange, onDelete }: {
           🗑️ Eliminar plantación
         </button>
       </>)}
+
+      {/* Planting lifecycle timeline */}
+      {plantingLogs.length > 0 && (
+        <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--earth-600)' }}>
+          <button onClick={() => setShowTimeline(!showTimeline)}
+            className="flex items-center gap-1 bg-transparent border-none cursor-pointer p-0 text-xs"
+            style={{ color: 'var(--earth-400)' }}>
+            <span>{showTimeline ? '▾' : '▸'}</span>
+            <span>Historial ({plantingLogs.length})</span>
+          </button>
+          {showTimeline && (
+            <div className="flex flex-col gap-1.5 mt-2">
+              {plantingLogs.map((log) => {
+                const at = ACTION_TYPES[log.action] ?? { label: log.action, emoji: '📝', color: 'var(--earth-400)' };
+                return (
+                  <div key={log.id} className="flex items-start gap-2">
+                    <span className="text-xs shrink-0">{at.emoji}</span>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs" style={{ color: 'var(--earth-200)' }}>{at.label}</span>
+                      {log.notes && <span className="text-xs ml-1" style={{ color: 'var(--earth-400)' }}>— {log.notes}</span>}
+                      <p className="text-xs mt-0 mb-0" style={{ color: 'var(--earth-600)', fontFamily: "'IBM Plex Mono', monospace" }}>
+                        {formatDate(log.created_at)}
+                      </p>
+                    </div>
+                    <button onClick={() => onDeleteLog(log.id)}
+                      className="shrink-0 bg-transparent border-none cursor-pointer p-0.5"
+                      style={{ color: 'var(--earth-600)', fontSize: '11px', minWidth: 24, minHeight: 24 }}>
+                      🗑️
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -294,16 +333,16 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
     const oldStage = p.stage ?? 0;
     if (oldStage === newStage) return;
     await updatePlanting(id, { stage: newStage });
+    const who = profile?.display_name ?? '';
     await addLog({
       bancal_id: bancal.id,
       planting_id: id,
-      action: 'observed',
-      notes: `${p.crop_name}: ${CROP_STAGES[oldStage].label} → ${CROP_STAGES[newStage].label}`,
+      action: 'stage_change',
+      notes: `${p.crop_name}: ${CROP_STAGES[oldStage].label} → ${CROP_STAGES[newStage].label}${who ? ` · ${who}` : ''}`,
     });
     refetchPlantings();
     refetchLogs();
-    const who = profile?.display_name ?? '';
-    showToast(`${CROP_STAGES[newStage].emoji} ${p.crop_name}: ${CROP_STAGES[newStage].label}${who ? ` · ${who}` : ''}`, 'success');
+    showToast(`${CROP_STAGES[newStage].emoji} ${p.crop_name}: ${CROP_STAGES[newStage].label}`, 'success');
   };
 
   const handleBancalStateChange = async (newStatus: string) => {
@@ -343,6 +382,9 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
     if (!deleteConfirm) return;
     if (deleteConfirm.type === 'planting') {
       const p = plantings.find((pl) => pl.id === deleteConfirm.id);
+      // Cascade: delete associated logs first
+      const associatedLogs = logs.filter((l) => l.planting_id === deleteConfirm.id);
+      for (const l of associatedLogs) await deleteLog(l.id);
       await deletePlanting(deleteConfirm.id);
       await addLog({
         bancal_id: bancal.id,
@@ -435,9 +477,11 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
         <div className="flex flex-col gap-2 mb-6">
           {activePlantings.map((p) => (
             <PlantingCard key={p.id} planting={p}
+              plantingLogs={logs.filter((l) => l.planting_id === p.id)}
               onFinalize={(id, status) => setFinalizing({ id, status })}
               onStageChange={handleStageChange}
-              onDelete={handleDeletePlanting} />
+              onDelete={handleDeletePlanting}
+              onDeleteLog={handleDeleteLog} />
           ))}
         </div>
       )}

@@ -13,6 +13,7 @@ export type ActionType =
   | 'soil_work'
   | 'chickens_in'
   | 'chickens_out'
+  | 'stage_change'
   | 'other';
 
 export interface Bancal {
