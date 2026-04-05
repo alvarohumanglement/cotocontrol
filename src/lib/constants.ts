@@ -1,5 +1,7 @@
 import type { Bancal, Planting, ActivityLog, ActionType, Profile } from './types';
 
+export const APP_VERSION = '1.0.0';
+
 export const COMUNEROS: Profile[] = [
   { id: 'nacho',  display_name: 'Nacho',  avatar_color: '#5A9A22', created_at: '2026-01-01T00:00:00Z' },
   { id: 'paloma', display_name: 'Paloma', avatar_color: '#8060CC', created_at: '2026-01-01T00:00:00Z' },

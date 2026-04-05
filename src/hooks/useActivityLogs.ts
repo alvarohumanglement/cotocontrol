@@ -64,5 +64,20 @@ export function useActivityLogs(bancalId?: string) {
     }
   };
 
-  return { logs, loading, error, addLog, refetch: fetchData };
+  const deleteLog = async (id: string) => {
+    if (!supabase) {
+      setLogs((prev) => prev.filter((l) => l.id !== id));
+      return;
+    }
+    const { error: err } = await supabase
+      .from('activity_logs')
+      .delete()
+      .eq('id', id);
+    if (err) {
+      setError(err.message);
+      throw new Error(err.message);
+    }
+  };
+
+  return { logs, loading, error, addLog, deleteLog, refetch: fetchData };
 }

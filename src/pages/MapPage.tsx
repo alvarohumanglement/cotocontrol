@@ -86,7 +86,7 @@ export function MapPage() {
       </div>
 
       {/* Map */}
-      <div className="flex-1 overflow-auto px-2 pb-2 relative">
+      <div className="flex-1 overflow-auto px-1 pb-1 flex items-center justify-center" style={{ touchAction: 'pan-x pan-y pinch-zoom' }}>
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-6 h-6 rounded-full border-2 border-t-transparent animate-spin"

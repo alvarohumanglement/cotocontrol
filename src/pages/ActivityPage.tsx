@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useActivityLogs } from '../hooks/useActivityLogs';
 import { useBancales } from '../hooks/useBancales';
 import { ACTION_TYPES, COMUNEROS } from '../lib/constants';
+import { useToast } from '../components/ui/Toast';
 import type { ActionType } from '../lib/types';
 
 function formatDayLabel(iso: string): string {
@@ -16,9 +17,11 @@ function formatTime(iso: string): string {
 }
 
 export function ActivityPage() {
-  const { logs, loading } = useActivityLogs();
+  const { logs, loading, deleteLog, refetch } = useActivityLogs();
   const { bancales } = useBancales();
+  const { show: showToast, element: toastEl } = useToast();
   const [filterBancal, setFilterBancal] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [filterActions, setFilterActions] = useState<Set<ActionType>>(new Set());
   const [filterComunero, setFilterComunero] = useState<string | null>(null);
 
@@ -53,8 +56,17 @@ export function ActivityPage() {
 
   const actionEntries = Object.entries(ACTION_TYPES) as [ActionType, (typeof ACTION_TYPES)[ActionType]][];
 
+  const confirmDeleteLog = async () => {
+    if (!deleteConfirm) return;
+    await deleteLog(deleteConfirm);
+    setDeleteConfirm(null);
+    refetch();
+    showToast('Registro eliminado', 'success');
+  };
+
   return (
     <div className="p-4 pb-8">
+      {toastEl}
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-2xl m-0" style={{ color: 'var(--earth-50)' }}>Actividad</h2>
         <span className="text-xs" style={{ color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
@@ -162,11 +174,40 @@ export function ActivityPage() {
                         {formatTime(log.created_at)}
                       </p>
                     </div>
+                    <button onClick={() => setDeleteConfirm(log.id)}
+                      className="shrink-0 bg-transparent border-none cursor-pointer p-1 rounded"
+                      style={{ color: 'var(--earth-400)', opacity: 0.5, minWidth: 32, minHeight: 32 }}>
+                      🗑️
+                    </button>
                   </div>
                 );
               })}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete confirm */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setDeleteConfirm(null)}>
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} />
+          <div className="relative rounded-xl p-5 max-w-xs w-full text-center mx-4"
+            style={{ background: 'var(--earth-800)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm mb-3" style={{ color: 'var(--earth-50)' }}>¿Eliminar este registro?</p>
+            <div className="flex gap-2">
+              <button onClick={() => setDeleteConfirm(null)}
+                className="flex-1 py-2 rounded-lg text-sm cursor-pointer"
+                style={{ background: 'transparent', border: '1px solid var(--earth-600)', color: 'var(--earth-200)' }}>
+                Cancelar
+              </button>
+              <button onClick={confirmDeleteLog}
+                className="flex-1 py-2 rounded-lg text-sm font-medium border-none cursor-pointer"
+                style={{ background: 'var(--alert)', color: 'white' }}>
+                Eliminar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

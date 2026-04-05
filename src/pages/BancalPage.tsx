@@ -70,10 +70,11 @@ function StageEditor({ planting, onStageChange }: { planting: Planting; onStageC
 }
 
 /* ── Planting Card ── */
-function PlantingCard({ planting, onFinalize, onStageChange }: {
+function PlantingCard({ planting, onFinalize, onStageChange, onDelete }: {
   planting: Planting;
   onFinalize: (id: string, status: 'harvested' | 'failed' | 'removed') => void;
   onStageChange: (id: string, stage: number) => void;
+  onDelete: (id: string) => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const stage = CROP_STAGES[planting.stage ?? 0];
@@ -118,7 +119,7 @@ function PlantingCard({ planting, onFinalize, onStageChange }: {
       <StageEditor planting={planting} onStageChange={(s) => onStageChange(planting.id, s)} />
 
       {/* Finalize menu */}
-      {showMenu && (
+      {showMenu && (<>
         <div className="flex gap-2 mt-2 pt-2" style={{ borderTop: '1px solid var(--earth-600)' }}>
           <button onClick={() => { setShowMenu(false); onFinalize(planting.id, 'harvested'); }}
             className="flex-1 text-xs py-1.5 rounded cursor-pointer border-none"
@@ -136,7 +137,12 @@ function PlantingCard({ planting, onFinalize, onStageChange }: {
             💀 Perdida
           </button>
         </div>
-      )}
+        <button onClick={() => { setShowMenu(false); onDelete(planting.id); }}
+          className="w-full text-xs py-1.5 mt-1 rounded cursor-pointer border-none"
+          style={{ background: 'var(--earth-900)', color: 'var(--alert)' }}>
+          🗑️ Eliminar plantación
+        </button>
+      </>)}
     </div>
   );
 }
@@ -263,8 +269,8 @@ function BancalStateSelector({ bancal, onStateChange }: {
 function BancalDetail({ bancal }: { bancal: Bancal }) {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { plantings, updatePlanting, refetch: refetchPlantings } = usePlantings(bancal.id);
-  const { logs, addLog, refetch: refetchLogs } = useActivityLogs(bancal.id);
+  const { plantings, updatePlanting, deletePlanting, refetch: refetchPlantings } = usePlantings(bancal.id);
+  const { logs, addLog, deleteLog, refetch: refetchLogs } = useActivityLogs(bancal.id);
   const { updateBancalStatus, refetch: refetchBancales } = useBancales();
   const { getLabel: getWaterLabel } = useLastWatered(logs);
   const { show: showToast, element: toastEl } = useToast();
@@ -273,6 +279,7 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
   const [finalizing, setFinalizing] = useState<{ id: string; status: 'harvested' | 'failed' | 'removed' } | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [stateConfirm, setStateConfirm] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'planting' | 'log'; id: string; label: string } | null>(null);
 
   const activePlantings = plantings.filter((p) => p.status === 'active');
   const historyPlantings = plantings
@@ -321,6 +328,37 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
     refetchBancales();
     refetchLogs();
     showToast(`${BANCAL_STATES[newStatus]?.emoji ?? '📝'} ${bancal.name}: ${newLabel}`, 'success');
+  };
+
+  const handleDeletePlanting = (id: string) => {
+    const p = plantings.find((pl) => pl.id === id);
+    setDeleteConfirm({ type: 'planting', id, label: `${p?.crop_name ?? 'plantación'} (${p?.quantity ?? 0})` });
+  };
+
+  const handleDeleteLog = (id: string) => {
+    setDeleteConfirm({ type: 'log', id, label: 'este registro' });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+    if (deleteConfirm.type === 'planting') {
+      const p = plantings.find((pl) => pl.id === deleteConfirm.id);
+      await deletePlanting(deleteConfirm.id);
+      await addLog({
+        bancal_id: bancal.id,
+        action: 'other',
+        notes: `Eliminado: ${p?.crop_name ?? ''} (${p?.quantity ?? 0} plantas)`,
+      });
+      const remaining = activePlantings.filter((pl) => pl.id !== deleteConfirm.id);
+      if (remaining.length === 0) await updateBancalStatus(bancal.id, 'waiting_chickens');
+      refetchPlantings();
+      showToast('Plantación eliminada', 'success');
+    } else {
+      await deleteLog(deleteConfirm.id);
+      showToast('Registro eliminado', 'success');
+    }
+    setDeleteConfirm(null);
+    refetchLogs();
   };
 
   const handleFinalize = async (notes: string) => {
@@ -398,7 +436,8 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
           {activePlantings.map((p) => (
             <PlantingCard key={p.id} planting={p}
               onFinalize={(id, status) => setFinalizing({ id, status })}
-              onStageChange={handleStageChange} />
+              onStageChange={handleStageChange}
+              onDelete={handleDeletePlanting} />
           ))}
         </div>
       )}
@@ -414,13 +453,18 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
             return (
               <div key={log.id} className="flex gap-3 items-start">
                 <span className="text-base shrink-0 mt-0.5">{at.emoji}</span>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <span className="text-sm font-medium" style={{ color: 'var(--earth-50)' }}>{at.label}</span>
                   {log.notes && <p className="text-xs mt-0.5 mb-0" style={{ color: 'var(--earth-400)' }}>{log.notes}</p>}
                   <p className="text-xs mt-0.5 mb-0" style={{ color: 'var(--earth-400)', fontFamily: "'IBM Plex Mono', monospace" }}>
                     {formatDateTime(log.created_at)}
                   </p>
                 </div>
+                <button onClick={() => handleDeleteLog(log.id)}
+                  className="shrink-0 bg-transparent border-none cursor-pointer p-1 rounded"
+                  style={{ color: 'var(--earth-400)', opacity: 0.5, minWidth: 32, minHeight: 32 }}>
+                  🗑️
+                </button>
               </div>
             );
           })}
@@ -501,6 +545,35 @@ function BancalDetail({ bancal }: { bancal: Bancal }) {
                 className="flex-1 py-2 rounded-lg text-sm font-medium border-none cursor-pointer"
                 style={{ background: 'var(--green-600)', color: 'white' }}>
                 Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setDeleteConfirm(null)}>
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} />
+          <div className="relative rounded-xl p-5 max-w-xs w-full text-center mx-4"
+            style={{ background: 'var(--earth-800)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <p className="text-sm mb-1" style={{ color: 'var(--earth-50)' }}>
+              ¿Eliminar {deleteConfirm.label}?
+            </p>
+            {deleteConfirm.type === 'planting' && (
+              <p className="text-xs mb-3" style={{ color: 'var(--alert)' }}>Esta acción no se puede deshacer.</p>
+            )}
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => setDeleteConfirm(null)}
+                className="flex-1 py-2 rounded-lg text-sm cursor-pointer"
+                style={{ background: 'transparent', border: '1px solid var(--earth-600)', color: 'var(--earth-200)' }}>
+                Cancelar
+              </button>
+              <button onClick={confirmDelete}
+                className="flex-1 py-2 rounded-lg text-sm font-medium border-none cursor-pointer"
+                style={{ background: 'var(--alert)', color: 'white' }}>
+                Eliminar
               </button>
             </div>
           </div>

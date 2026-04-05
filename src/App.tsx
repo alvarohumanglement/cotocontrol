@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { AppShell } from './components/layout/AppShell';
 import { LoginScreen } from './components/auth/LoginScreen';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { MapPage } from './pages/MapPage';
 import { BancalPage } from './pages/BancalPage';
 import { ActivityPage } from './pages/ActivityPage';
@@ -49,10 +50,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

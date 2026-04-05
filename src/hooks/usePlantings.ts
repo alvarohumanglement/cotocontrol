@@ -79,5 +79,20 @@ export function usePlantings(bancalId?: string) {
     }
   };
 
-  return { plantings, loading, error, addPlanting, updatePlanting, refetch: fetchData };
+  const deletePlanting = async (id: string) => {
+    if (!supabase) {
+      setPlantings((prev) => prev.filter((p) => p.id !== id));
+      return;
+    }
+    const { error: err } = await supabase
+      .from('plantings')
+      .delete()
+      .eq('id', id);
+    if (err) {
+      setError(err.message);
+      throw new Error(err.message);
+    }
+  };
+
+  return { plantings, loading, error, addPlanting, updatePlanting, deletePlanting, refetch: fetchData };
 }

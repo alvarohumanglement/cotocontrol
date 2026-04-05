@@ -18,9 +18,10 @@ export function HuertaMap({ bancales, plantings, waterMap }: HuertaMapProps) {
 
   return (
     <svg
-      viewBox="0 0 960 750"
+      viewBox="20 15 940 680"
       width="100%"
-      style={{ maxWidth: '960px', display: 'block' }}
+      preserveAspectRatio="xMidYMid meet"
+      style={{ display: 'block', maxHeight: 'calc(100vh - 180px)' }}
       role="img"
       aria-label="Mapa de CotoControl"
     >
