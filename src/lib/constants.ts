@@ -18,32 +18,31 @@ export const BANCAL_STATES: Record<string, { label: string; emoji: string; color
 };
 
 export const BANCALES: Bancal[] = [
-  // Círculo B1-B9 — centro (300, 420), radio 120
-  // B1 a las y25 (150°), clockwise 37.5° cada uno, hueco 120° arriba-derecha
-  { id: 'B1',  name: 'Bancal 1',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 360, position_y: 524, rotation: 150, status: 'planted' },
-  { id: 'B2',  name: 'Bancal 2',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 296, position_y: 540, rotation: 188, status: 'planted' },
-  { id: 'B3',  name: 'Bancal 3',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 234, position_y: 510, rotation: 225, status: 'chickens' },
-  { id: 'B4',  name: 'Bancal 4',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 204, position_y: 450, rotation: 263, status: 'empty' },
-  { id: 'B5',  name: 'Bancal 5',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 218, position_y: 382, rotation: 300, status: 'empty' },
-  { id: 'B6',  name: 'Bancal 6',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 268, position_y: 334, rotation: 338, status: 'planted' },
-  { id: 'B7',  name: 'Bancal 7',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 336, position_y: 326, rotation: 15,  status: 'planted' },
-  { id: 'B8',  name: 'Bancal 8',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 396, position_y: 364, rotation: 53,  status: 'fallow' },
-  { id: 'B9',  name: 'Bancal 9',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 420, position_y: 430, rotation: 90,  status: 'empty' },
+  // Círculo B1-B9 — centro (155, 290), radial como manecillas de reloj
+  { id: 'B1',  name: 'Bancal 1',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 155, position_y: 290, rotation: 162, status: 'planted' },
+  { id: 'B2',  name: 'Bancal 2',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 155, position_y: 290, rotation: 193, status: 'planted' },
+  { id: 'B3',  name: 'Bancal 3',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 155, position_y: 290, rotation: 223, status: 'chickens' },
+  { id: 'B4',  name: 'Bancal 4',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 155, position_y: 290, rotation: 254, status: 'empty' },
+  { id: 'B5',  name: 'Bancal 5',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 155, position_y: 290, rotation: 284, status: 'empty' },
+  { id: 'B6',  name: 'Bancal 6',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 155, position_y: 290, rotation: 315, status: 'planted' },
+  { id: 'B7',  name: 'Bancal 7',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 155, position_y: 290, rotation: 345, status: 'planted' },
+  { id: 'B8',  name: 'Bancal 8',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 155, position_y: 290, rotation: 16,  status: 'fallow' },
+  { id: 'B9',  name: 'Bancal 9',  type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 155, position_y: 290, rotation: 47,  status: 'empty' },
 
   // B10, B11 — Lateral izquierdo superior
-  { id: 'B10', name: 'Bancal 10', type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 40,  position_y: 200, rotation: 90,  status: 'planted' },
-  { id: 'B11', name: 'Bancal 11', type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 2, position_x: 72,  position_y: 200, rotation: 90,  status: 'empty' },
+  { id: 'B10', name: 'Bancal 10', type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 12,  position_y: 110, rotation: 90,  status: 'planted' },
+  { id: 'B11', name: 'Bancal 11', type: 'small', width_m: 1.2, length_m: 5,  irrigation_lines: 1, position_x: 36,  position_y: 110, rotation: 90,  status: 'empty' },
 
-  // Bancales grandes (10m × 1.2m)
-  { id: 'B12', name: 'Bancal 12', type: 'large', width_m: 1.2, length_m: 10, irrigation_lines: 2, position_x: 120, position_y: 620, rotation: 0,  status: 'planted' },
-  { id: 'B13', name: 'Bancal 13', type: 'large', width_m: 1.2, length_m: 10, irrigation_lines: 2, position_x: 120, position_y: 650, rotation: 0,  status: 'empty' },
-  { id: 'B14', name: 'Bancal 14', type: 'large', width_m: 1.2, length_m: 10, irrigation_lines: 2, position_x: 550, position_y: 310, rotation: 0,  status: 'planted' },
-  { id: 'B15', name: 'Bancal 15', type: 'large', width_m: 1.2, length_m: 10, irrigation_lines: 2, position_x: 550, position_y: 340, rotation: 0,  status: 'planted' },
+  // Bancales grandes
+  { id: 'B12', name: 'Bancal 12', type: 'large', width_m: 1.2, length_m: 10, irrigation_lines: 2, position_x: 50,  position_y: 440, rotation: 0,  status: 'planted' },
+  { id: 'B13', name: 'Bancal 13', type: 'large', width_m: 1.2, length_m: 10, irrigation_lines: 2, position_x: 176, position_y: 440, rotation: 0,  status: 'empty' },
+  { id: 'B14', name: 'Bancal 14', type: 'large', width_m: 1.2, length_m: 10, irrigation_lines: 2, position_x: 345, position_y: 326, rotation: 90, status: 'planted' },
+  { id: 'B15', name: 'Bancal 15', type: 'large', width_m: 1.2, length_m: 10, irrigation_lines: 2, position_x: 345, position_y: 210, rotation: 90, status: 'planted' },
 
   // Zonas especiales
-  { id: 'INV', name: 'Invernadero', type: 'greenhouse', width_m: 3,  length_m: 8,  irrigation_lines: 8, irrigation_spacing_cm: 30, position_x: 500, position_y: 90,  rotation: 0, status: 'planted' },
-  { id: 'PAT', name: 'Patatal',     type: 'patatal',    width_m: 5,  length_m: 15, irrigation_lines: 5, position_x: 200, position_y: 50,  rotation: 0, status: 'planted' },
-  { id: 'LFR', name: 'Línea frutal', type: 'small',     width_m: 0.5, length_m: 5,  irrigation_lines: 1, position_x: 540, position_y: 220, rotation: 90, status: 'planted' },
+  { id: 'INV', name: 'Invernadero', type: 'greenhouse', width_m: 3,  length_m: 8,  irrigation_lines: 5, irrigation_spacing_cm: 30, position_x: 225, position_y: 95,  rotation: 0, status: 'planted' },
+  { id: 'PAT', name: 'Patatal',     type: 'patatal',    width_m: 5,  length_m: 15, irrigation_lines: 5, position_x: 45,  position_y: 16,  rotation: 0, status: 'planted' },
+  { id: 'LFR', name: 'Línea frutal', type: 'small',     width_m: 0.5, length_m: 5,  irrigation_lines: 1, position_x: 338, position_y: 95,  rotation: 90, status: 'planted' },
 ];
 
 export const ACTION_TYPES: Record<ActionType, { label: string; emoji: string; color: string }> = {
