@@ -10,11 +10,11 @@ export const COMUNEROS: Profile[] = [
 ];
 
 export const BANCAL_STATES: Record<string, { label: string; emoji: string; color: string; bg: string }> = {
-  planted:          { label: 'Plantado',       emoji: '🌱', color: 'var(--green-400)',  bg: 'var(--green-900)' },
-  waiting_chickens: { label: 'Esp. gallinas',  emoji: '⏳', color: 'var(--orange-200)', bg: 'var(--earth-800)' },
-  chickens:         { label: 'Gallinas',       emoji: '🐔', color: 'var(--orange-400)', bg: 'var(--orange-900)' },
-  post_chickens:    { label: 'Para preparar',  emoji: '⛏️', color: 'var(--purple-400)', bg: 'var(--purple-900)' },
-  available:        { label: 'Disponible',     emoji: '✅', color: 'var(--green-200)',  bg: 'var(--earth-800)' },
+  planted:          { label: 'Plantado',        emoji: '🌱', color: '#4a9e3c', bg: '#2d5a27' },
+  waiting_chickens: { label: 'Esp. gallinas',   emoji: '⏳', color: '#d4a030', bg: '#8a6a20' },
+  chickens:         { label: 'Gallinas',        emoji: '🐔', color: '#d4802a', bg: '#8a4a10' },
+  post_chickens:    { label: 'Para preparar',   emoji: '⛏️', color: '#8a7040', bg: '#5a4020' },
+  available:        { label: 'Disponible',      emoji: '✅', color: '#6b5d42', bg: '#3d3425' },
 };
 
 export const BANCALES: Bancal[] = [

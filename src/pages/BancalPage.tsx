@@ -22,14 +22,15 @@ function formatDateTime(iso: string): string {
 }
 
 const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  planted:          { bg: 'var(--green-50)',   text: 'var(--green-800)',  label: 'Plantado' },
-  empty:            { bg: 'var(--earth-200)',  text: 'var(--earth-800)',  label: 'Libre' },
-  available:        { bg: 'var(--earth-200)',  text: 'var(--earth-800)',  label: 'Disponible' },
-  fallow:           { bg: 'var(--orange-50)',  text: 'var(--orange-800)', label: 'Barbecho' },
-  chickens:         { bg: 'var(--orange-50)',  text: 'var(--orange-800)', label: '🐔 Gallinas' },
-  waiting_chickens: { bg: 'var(--orange-50)',  text: 'var(--orange-800)', label: '🐔 Esperando gallinas' },
-  post_chickens:    { bg: 'var(--green-50)',   text: 'var(--green-800)',  label: 'Post-gallinas' },
-  resting:          { bg: 'var(--earth-200)',  text: 'var(--earth-800)',  label: 'Descanso' },
+  planted:          { bg: '#2d5a27', text: '#4a9e3c', label: '🌱 Plantado' },
+  waiting_chickens: { bg: '#8a6a20', text: '#d4a030', label: '⏳ Esp. gallinas' },
+  chickens:         { bg: '#8a4a10', text: '#d4802a', label: '🐔 Gallinas' },
+  post_chickens:    { bg: '#5a4020', text: '#8a7040', label: '⛏️ Para preparar' },
+  available:        { bg: '#3d3425', text: '#6b5d42', label: '✅ Disponible' },
+  // Legacy fallbacks
+  empty:            { bg: '#3d3425', text: '#6b5d42', label: '✅ Disponible' },
+  fallow:           { bg: '#8a4a10', text: '#d4802a', label: '🐔 Gallinas' },
+  resting:          { bg: '#3d3425', text: '#6b5d42', label: '✅ Disponible' },
 };
 
 const FINALIZE_CONFIG = {
