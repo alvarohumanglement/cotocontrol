@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HuertaMap } from '../components/map/HuertaMap';
+import HuertaMapSVG from '../components/map/HuertaMapSVG';
 import { useBancales } from '../hooks/useBancales';
 import { usePlantings } from '../hooks/usePlantings';
 import { useActivityLogs } from '../hooks/useActivityLogs';
@@ -12,7 +12,7 @@ export function MapPage() {
   const { bancales, loading: bLoading, error: bError } = useBancales();
   const { plantings, loading: pLoading } = usePlantings();
   const { logs, addLog, refetch: refetchLogs } = useActivityLogs();
-  const { getLabel, getDays } = useLastWatered(logs);
+  const { getDays } = useLastWatered(logs);
   const { show: showToast, element: toastEl } = useToast();
   const [showWaterSheet, setShowWaterSheet] = useState(false);
 
@@ -93,7 +93,7 @@ export function MapPage() {
               style={{ borderColor: 'var(--green-400)', borderTopColor: 'transparent' }} />
           </div>
         ) : (
-          <HuertaMap bancales={bancales} plantings={plantings} waterMap={{ getLabel, getDays }} />
+          <HuertaMapSVG bancales={bancales} />
         )}
       </div>
 

@@ -60,3 +60,19 @@ h1, h2, h3, h4 {
 code, pre, .font-mono {
   font-family: 'IBM Plex Mono', monospace;
 }
+
+/* Bancal SVG status colors */
+.bancal-planted rect { fill: var(--green-800); stroke: var(--green-600); stroke-width: 1.5; }
+.bancal-planted:hover rect { fill: var(--green-600); stroke: var(--green-400); }
+
+.bancal-available rect { fill: var(--earth-800); stroke: var(--earth-600); stroke-width: 1.5; }
+.bancal-available:hover rect { fill: var(--earth-600); stroke: var(--earth-400); }
+
+.bancal-chickens rect { fill: var(--orange-400); stroke: var(--orange-600); stroke-width: 1.5; opacity: 0.8; }
+.bancal-chickens:hover rect { fill: var(--orange-200); stroke: var(--orange-400); }
+
+.bancal-fallow rect { fill: var(--orange-800); stroke: var(--orange-600); stroke-width: 1.5; }
+.bancal-fallow:hover rect { fill: var(--orange-600); stroke: var(--orange-400); }
+
+.bancal-shape { outline: none; }
+.bancal-shape rect { transition: all 0.25s ease; }
